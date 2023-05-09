@@ -15,6 +15,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+    void debugConnect(QString str, int id);
+    void showWindow();
+
 private:
     Ui::MainWindow *ui;
 };
