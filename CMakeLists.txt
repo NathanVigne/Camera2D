@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Camera2D VERSION 0.1 LANGUAGES CXX)
+project(Camera2D VERSION 0.1 LANGUAGES C CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -12,3 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_subdirectory(src/app)
+add_subdirectory(src/thorlabs)
+
+
