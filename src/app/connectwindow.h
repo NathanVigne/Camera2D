@@ -5,8 +5,10 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QStringList>
+#include <QThread>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <thorlabs.h>
 
 class ConnectWindow : public QWidget
 {
@@ -17,17 +19,25 @@ public:
     ~ConnectWindow();
 
 public slots:
-    void cameraFound(QStringList *cam_name);
-    void cameraSelect();
+    void cameraFound(CameraNameId *names_ids);
+    void connectClicked();
+    void refrechClicked();
 
 signals:
     void cameraConnect(QString, int);
+    void cameraRefresh();
 
 private:
     QPushButton *boutton_connect;
+    QPushButton *boutton_refresh;
     QComboBox *cam_name_display;
-    QVBoxLayout *layout;
+    QVBoxLayout *v_layout;
+    QHBoxLayout *h_layout;
     QLabel *label;
+
+    QThread thread;
+    // TO DO : remove when cam loader is done
+    CameraNameId name_id;
 };
 
 #endif // CONNECTWINDOW_H

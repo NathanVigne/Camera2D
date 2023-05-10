@@ -40,6 +40,7 @@ add_custom_command(TARGET Camera2D POST_BUILD
                        #
 target_link_libraries(Camera2D PRIVATE
     Qt6::Widgets
+    #Qt6::Concurrent
     thorlabs
 )
 
