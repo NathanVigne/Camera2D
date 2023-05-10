@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon(":/icon/cam_ico.png"));
 }
 
 MainWindow::~MainWindow()
