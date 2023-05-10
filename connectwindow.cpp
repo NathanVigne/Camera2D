@@ -28,6 +28,7 @@ ConnectWindow::ConnectWindow(QWidget *parent)
     layout->addWidget(boutton_connect);
     layout->addSpacing(30);
 
+    // Place holder for the signal from the camLoader !
     QStringList strList = {"Arial", "Helvetica", "Times"};
     cameraFound(&strList);
 
