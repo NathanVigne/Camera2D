@@ -16,8 +16,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void debugConnect(QString str, int id);
-    void showWindow();
+    void debugConnect(void *cam_handle);
 
 private:
     Ui::MainWindow *ui;

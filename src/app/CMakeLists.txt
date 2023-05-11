@@ -2,15 +2,14 @@ set(PROJECT_SOURCES
     main.cpp
     mainwindow.cpp
     connectwindow.cpp
-    #tl_camera_sdk_load.c
-
+    camloader.cpp
 )
 
 set(PROJECT_HEADERS
     mainwindow.h
     connectwindow.h
-    #tl_camera_sdk.h
-    #tl_camera_sdk_load.h
+    camloader.h
+
 )
 
 set(PROJECT_UI

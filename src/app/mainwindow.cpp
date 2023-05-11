@@ -16,12 +16,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::debugConnect(QString str, int id)
+void MainWindow::debugConnect(void *cam_handle)
 {
-    qDebug() << str << id;
-}
-
-void MainWindow::showWindow()
-{
+    qDebug() << cam_handle;
     this->show();
 }

@@ -1,9 +1,15 @@
 #ifndef THORLABS_H
 #define THORLABS_H
 #include <QDebug>
+#include "tl_camera_sdk.h"
+#include "tl_camera_sdk_load.h"
 
 /*!
     Header file with wrapper funtion to use a thorlabs camera 
+*/
+
+/*!
+    Error enum to display and do specific actions
 */
 enum thor_ERROR {
     ERROR_INIT_DLL,
@@ -14,6 +20,9 @@ enum thor_ERROR {
 
 };
 
+/*!
+    Struc to encapsulate names and IDs of connected camera
+*/
 struct CameraNameId
 {
     QStringList camera_Name;
@@ -23,7 +32,7 @@ struct CameraNameId
 // Initialisation
 void thor_intializeDLLs();
 CameraNameId thor_searchCamera();
-void *thor_connectCamera(int id);
+void *thor_connectCamera(QString *ID);
 
 // callback function (Pas sur d'avoir besoin de les mettre ici !!
 // a réfléchir

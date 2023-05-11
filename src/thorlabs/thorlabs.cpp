@@ -1,7 +1,4 @@
 #include "thorlabs.h"
-#include "tl_camera_sdk.h"
-#include "tl_camera_sdk_load.h"
-#include <tuple>
 
 // Initialisation
 void thor_intializeDLLs()
@@ -75,6 +72,17 @@ CameraNameId thor_searchCamera()
     name_id.camera_Name = camera_names_list;
 
     return name_id;
+}
+
+void *thor_connectCamera(QString *ID)
+{
+    void *camera_handle = 0;
+    // Connect to the camera (get a handle to it).
+    if (tl_camera_open_camera(ID->toUtf8().data(), &camera_handle)) {
+        // deal with error "Failed to discover camera"
+        thor_errorHandling(thor_ERROR::ERROR_CONNECT_CAM);
+    }
+    return camera_handle;
 }
 
 // closing
