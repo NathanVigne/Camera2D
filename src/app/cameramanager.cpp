@@ -1,5 +1,4 @@
 #include "cameramanager.h"
-#include "thorcam.h"
 
 /*!
     \fn CameraManager::CameraManager(QObject *parent) : QObject(parent)
@@ -112,21 +111,18 @@ void CameraManager::CameraConnect(int id)
     if (id < camera_list.id.size()) {
         switch (camera_list.type[id]) {
         case THORLABS:
-            camera = new ThorCam;
+            camera = new ThorCam();
             isCamera = true;
             result = camera->Connect(camera_list.id[id]);
             break;
         case MIGHTEX:
             // TO DO mightex implementation
-            camera = 0;
             break;
         case CAMTYPE_LAST:
-            camera = 0;
             break;
         }
         if (result < 0) {
             std::cerr << "CameraManager :: CameraConect. Erreur connecting camera" << std::endl;
-            camera = 0;
             isCamera = false;
             emit signal_FailledCamConnect();
             return;

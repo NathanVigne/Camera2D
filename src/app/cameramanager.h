@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QThread>
 #include "icamera.h"
+#include "thorcam.h"
 
 enum CAMERATYPE { THORLABS, CAMTYPE_LAST, MIGHTEX };
 
