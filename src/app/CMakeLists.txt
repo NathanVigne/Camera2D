@@ -2,14 +2,14 @@ set(PROJECT_SOURCES
     main.cpp
     mainwindow.cpp
     connectwindow.cpp
-    camloader.cpp
+    cameramanager.cpp
 )
 
 set(PROJECT_HEADERS
     mainwindow.h
     connectwindow.h
-    camloader.h
-
+    icamera.h
+    cameramanager.h
 )
 
 set(PROJECT_UI
@@ -36,7 +36,7 @@ add_custom_command(TARGET Camera2D POST_BUILD
 
 )
 
-                       #
+
 target_link_libraries(Camera2D PRIVATE
     Qt6::Widgets
     #Qt6::Concurrent

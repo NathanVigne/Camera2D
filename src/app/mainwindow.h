@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "icamera.h"
+#include <iostream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,7 +18,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void debugConnect(void *cam_handle);
+    void debugConnect(ICamera *camera);
 
 private:
     Ui::MainWindow *ui;

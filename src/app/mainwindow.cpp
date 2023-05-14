@@ -1,6 +1,4 @@
 #include "mainwindow.h"
-#include <QDebug>
-#include <QString>
 #include "./ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -16,8 +14,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::debugConnect(void *cam_handle)
+void MainWindow::debugConnect(ICamera *camera)
 {
-    qDebug() << cam_handle;
+    std::clog << "ICamera pointer : " << camera << std::endl;
     this->show();
 }
