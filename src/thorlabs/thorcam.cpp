@@ -122,6 +122,18 @@ void ThorCam::SetExposure(const long long exposure_us)
     }
 }
 
+long long ThorCam::GetExposure()
+{
+    long long exp = 0;
+    int result = tl_camera_get_exposure_time(handle, &exp);
+    if (result != 0) {
+        std::cerr << "Thorlab :: Failed to get Exposure : " << tl_camera_get_last_error()
+                  << std::endl;
+        return exp;
+    }
+    return exp;
+}
+
 /*! \fn void ThorCam::SetGain(const double gain_db)
     
     Thorlabs implementation of the public Interface function to

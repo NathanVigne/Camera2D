@@ -111,12 +111,14 @@ void CameraManager::DiscoverCameras()
 void CameraManager::CameraConnect(int id)
 {
     int result = -1;
+    CAMERATYPE type;
     if (id < camera_list.id.size()) {
         switch (camera_list.type[id]) {
         case THORLABS:
             camera = new ThorCam();
             isCamera = true;
             result = camera->Connect(camera_list.id[id]);
+            type = CAMERATYPE::THORLABS;
             break;
         case MIGHTEX:
             // TO DO mightex implementation
@@ -133,7 +135,7 @@ void CameraManager::CameraConnect(int id)
             return;
         }
         camera->Initialize();
-        emit signal_EndOfCamConnect(camera);
+        emit signal_EndOfCamConnect(camera, type);
         QThread::currentThread()->quit();
         return;
     }

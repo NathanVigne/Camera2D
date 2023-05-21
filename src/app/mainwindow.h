@@ -14,6 +14,7 @@
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpacerItem>
+#include "cameramanager.h"
 #include "gldisplay.h"
 #include "icamera.h"
 #include <iostream>
@@ -33,7 +34,7 @@ public:
 public slots:
     void callBackDraw();
 
-    void slot_CameraOpen(ICamera *camera);
+    void slot_CameraOpen(ICamera *camera, CAMERATYPE type);
 
     // Push Button slots
     void slot_Start();
@@ -50,7 +51,7 @@ public slots:
     void slot_Exposure(int newExposure);
 
     // Color slots
-    // TO DO
+    void slot_Color(bool check);
 
     // Check Box slots
     // TO DO
@@ -61,6 +62,7 @@ private:
 private:
     ICamera *cam = nullptr;
     QMutex m_mutex;
+    CAMERATYPE cam_type;
 
     // ----------------------------------------
     // Central widget

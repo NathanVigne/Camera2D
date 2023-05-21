@@ -25,7 +25,7 @@ public:
 public slots:
     // slot for receiving info from cam loader
     void slot_cameraFound(CamList *names_list);
-    void slot_cameraConnect(ICamera *camera);
+    void slot_cameraConnect(ICamera *camera, CAMERATYPE type);
     void slot_failledCamConnect();
 
 private slots:
@@ -39,7 +39,7 @@ signals:
     void signal_Refresh();
 
     // signal to send when a camera is connected
-    void signal_cameraConnected(ICamera *);
+    void signal_cameraConnected(ICamera *, CAMERATYPE);
 
 private:
     QPushButton *boutton_connect;

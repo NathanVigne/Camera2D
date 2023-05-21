@@ -93,9 +93,9 @@ void ConnectWindow::slot_cameraFound(CamList *names_list)
     Pass the camera_handle along then close connect Window
 
 */
-void ConnectWindow::slot_cameraConnect(ICamera *camera)
+void ConnectWindow::slot_cameraConnect(ICamera *camera, CAMERATYPE type)
 {
-    emit signal_cameraConnected(camera);
+    emit signal_cameraConnected(camera, type);
     this->close();
 }
 

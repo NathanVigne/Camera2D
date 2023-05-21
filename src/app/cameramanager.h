@@ -43,7 +43,7 @@ signals:
     // Signal to send the ConnectWindow when
     // the private work is done
     void signal_EndOfCamScan(CamList *);
-    void signal_EndOfCamConnect(ICamera *);
+    void signal_EndOfCamConnect(ICamera *, CAMERATYPE);
     void signal_FailledCamConnect();
 
 private:

@@ -27,6 +27,7 @@ public:
     virtual void Stop() = 0;
     virtual void SingleShot() = 0;
     virtual void SetExposure(const long long exposure_us) = 0;
+    virtual long long GetExposure() = 0;
     virtual void SetGain(const double gain_db) = 0;
 
     // Camera managment

@@ -21,6 +21,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Exposure connection
     connect(sliderExposure, &QSlider::valueChanged, this, &MainWindow::slot_Exposure);
+
+    //Color connection
+    connect(rbMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
+    connect(rbSatMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
+    connect(rbSatColor, &QRadioButton::toggled, this, &MainWindow::slot_Color);
 }
 
 MainWindow::~MainWindow()
@@ -34,9 +39,10 @@ void MainWindow::callBackDraw()
     mainDisplay->update();
 }
 
-void MainWindow::slot_CameraOpen(ICamera *camera)
+void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 {
     cam = camera;
+    cam_type = type;
     std::clog << "ICamera pointer : " << cam << std::endl;
 
     dsbGain->setMaximum(cam->getMaxGain());
@@ -45,8 +51,17 @@ void MainWindow::slot_CameraOpen(ICamera *camera)
     cam->SetGain(cam->getMinGain());
 
     // in µs
-    sliderExposure->setMinimum((int) cam->getMinExposure());
-    sliderExposure->setMaximum((int) cam->getMaxExposure());
+    int min, max;
+    if (cam_type == CAMERATYPE::THORLABS) {
+        min = int(double(log10(cam->getMinExposure()) * 1000.0));
+        max = int(double(log10(cam->getMaxExposure()) * 1000.0));
+    } else {
+        min = (int) cam->getMinExposure();
+        max = (int) cam->getMaxExposure();
+    }
+
+    sliderExposure->setMinimum(min);
+    sliderExposure->setMaximum(max);
     sliderExposure->setValue((int) cam->getMinExposure());
     cam->SetExposure(cam->getMinExposure());
     cam->m_mutex = &m_mutex;
@@ -100,11 +115,32 @@ void MainWindow::slot_Gain(double newGain)
 
 void MainWindow::slot_Exposure(int newExposure)
 {
-    std::clog << "New Exposure : " << newExposure << std::endl;
+    float value;
+    if (cam_type == CAMERATYPE::THORLABS) {
+        value = std::pow(10, float(newExposure) / 1000.0);
+    } else {
+        value = float(newExposure);
+    }
 
-    QString str = QStringLiteral("%1 ms").arg((float) newExposure / 1000.0);
+    cam->SetExposure((long long) value);
+
+    std::clog << "New Exposure : " << value << std::endl;
+    long long camVal = cam->GetExposure();
+    std::clog << "New Exposure : " << value << "Cam Exposure : " << camVal << std::endl;
+
+    QString str = QStringLiteral("%1 ms").arg((float) camVal / 1000.0);
     labelExposure->setText(str);
-    cam->SetExposure((long long) newExposure);
+}
+
+void MainWindow::slot_Color(bool check)
+{
+    if (rbMonochrome->isChecked()) {
+        std::clog << "ColorMonochrome" << std::endl;
+    } else if (rbSatMonochrome->isChecked()) {
+        std::clog << "ColorMonochrome Sat" << std::endl;
+    } else if (rbSatColor->isChecked()) {
+        std::clog << "Color Color" << std::endl;
+    }
 }
 
 /*!
@@ -151,6 +187,7 @@ void MainWindow::uiSetUp()
     rbMonochrome = new QRadioButton("Gray Level", this);
     rbSatMonochrome = new QRadioButton("Gray Level, Red Saturated", this);
     rbSatColor = new QRadioButton("Color : Thermal", this);
+    rbMonochrome->setChecked(true);
 
     // Labels
     labelExposure = new QLabel("0,00 ms", this);

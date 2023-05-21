@@ -17,6 +17,7 @@ public:
     void Stop() override;
     void SingleShot() override;
     void SetExposure(const long long exposure_us) override;
+    long long GetExposure() override;
     void SetGain(const double gain_db) override;
 
     // Connect / Disconect
