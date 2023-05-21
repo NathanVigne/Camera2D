@@ -1,13 +1,26 @@
 #include "mainwindow.h"
-//#include "./ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-//, ui(new Ui::MainWindow)
 {
-    //ui->setupUi(this);
     setWindowIcon(QIcon(":/icon/cam_ico.png"));
     uiSetUp();
+
+    // Connect Slot to cam !
+    // TO DO caonnection with Color and chack boxes !
+    // PushButtons connection
+    connect(bStart, &QPushButton::clicked, this, &MainWindow::slot_Start);
+    connect(bStop, &QPushButton::clicked, this, &MainWindow::slot_Stop);
+    connect(bSingleShot, &QPushButton::clicked, this, &MainWindow::slot_SingleShot);
+    connect(bExport, &QPushButton::clicked, this, &MainWindow::slot_Export);
+    connect(bQuit, &QPushButton::clicked, this, &MainWindow::slot_Quit);
+    connect(bResetZoom, &QPushButton::clicked, this, &MainWindow::slot_ResetZoom);
+
+    // Gain connection
+    connect(dsbGain, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Gain);
+
+    // Exposure connection
+    connect(sliderExposure, &QSlider::valueChanged, this, &MainWindow::slot_Exposure);
 }
 
 MainWindow::~MainWindow()
@@ -15,10 +28,83 @@ MainWindow::~MainWindow()
     //delete ui;
 }
 
-void MainWindow::debugConnect(ICamera *camera)
+void MainWindow::callBackDraw()
 {
-    std::clog << "ICamera pointer : " << camera << std::endl;
+    mainDisplay->setTexture(cam->temp_image_buffer, &m_mutex);
+    mainDisplay->update();
+}
+
+void MainWindow::slot_CameraOpen(ICamera *camera)
+{
+    cam = camera;
+    std::clog << "ICamera pointer : " << cam << std::endl;
+
+    dsbGain->setMaximum(cam->getMaxGain());
+    dsbGain->setMinimum(cam->getMinGain());
+    dsbGain->setValue(cam->getMinGain());
+    cam->SetGain(cam->getMinGain());
+
+    // in µs
+    sliderExposure->setMinimum((int) cam->getMinExposure());
+    sliderExposure->setMaximum((int) cam->getMaxExposure());
+    sliderExposure->setValue((int) cam->getMinExposure());
+    cam->SetExposure(cam->getMinExposure());
+    cam->m_mutex = &m_mutex;
+
+    connect(cam, &ICamera::frameReady, this, &MainWindow::callBackDraw);
+    mainDisplay->texHeigth = cam->getSensorHeigth();
+    mainDisplay->texWidth = cam->getSensorWidth();
     this->show();
+}
+
+void MainWindow::slot_Start()
+{
+    std::clog << "Start Clicked" << std::endl;
+    cam->Start();
+}
+
+void MainWindow::slot_Stop()
+{
+    std::clog << "Stop Clicked" << std::endl;
+    cam->Stop();
+}
+
+void MainWindow::slot_SingleShot()
+{
+    std::clog << "Single Shot Clicked" << std::endl;
+    cam->SingleShot();
+}
+
+void MainWindow::slot_Export()
+{
+    std::clog << "Export Clicked" << std::endl;
+}
+
+void MainWindow::slot_Quit()
+{
+    std::clog << "Quit Clicked" << std::endl;
+    close();
+}
+
+void MainWindow::slot_ResetZoom()
+{
+    std::clog << "ResetZoom Clicked" << std::endl;
+    mainDisplay->resetZoom();
+}
+
+void MainWindow::slot_Gain(double newGain)
+{
+    std::clog << "New Gain : " << newGain << std::endl;
+    cam->SetGain(newGain);
+}
+
+void MainWindow::slot_Exposure(int newExposure)
+{
+    std::clog << "New Exposure : " << newExposure << std::endl;
+
+    QString str = QStringLiteral("%1 ms").arg((float) newExposure / 1000.0);
+    labelExposure->setText(str);
+    cam->SetExposure((long long) newExposure);
 }
 
 /*!
@@ -99,9 +185,11 @@ void MainWindow::uiSetUp()
     // Group Boxes
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
 
-    // Check Boxes
+    // Check Boxes + Pusbbuton
     cbCentrage = new QCheckBox("Automatic centering", this);
     cbEnergy = new QCheckBox("Circle 86.5 %", this);
+    bResetZoom = new QPushButton(this);
+    bResetZoom->setText("Reset Zoom");
 
     // Label
     labelInfo = new QLabel("Info");
@@ -109,6 +197,7 @@ void MainWindow::uiSetUp()
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
     lCheckBoxes->addWidget(cbEnergy);
+    lCheckBoxes->addWidget(bResetZoom);
     lSecondaryDisplay = new QVBoxLayout;
     lSecondaryDisplay->addLayout(lCheckBoxes);
     lSecondaryDisplay->addWidget(xcutDisplay);
@@ -120,7 +209,7 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     // Main display
     // ----------------------------------------
-    mainDisplay = new QGraphicsView(this);
+    mainDisplay = new GLDisplay(this);
 
     // ----------------------------------------
     // Central Widget set-up
@@ -130,6 +219,12 @@ void MainWindow::uiSetUp()
     mainLayout->addLayout(lButtons, 1, 1);
     mainLayout->addWidget(mainDisplay, 0, 0);
     mainLayout->addWidget(gbSecondaryDisplay, 0, 1);
+    mainLayout->setColumnStretch(0, 3);
+    mainLayout->setColumnStretch(1, 2);
+    mainLayout->setColumnMinimumWidth(0, 600);
+    mainLayout->setRowMinimumHeight(0, 400);
+    mainLayout->setRowStretch(0, 1);
+    mainLayout->setRowStretch(1, 0);
 
     window = new QWidget();
     window->setLayout(mainLayout);

@@ -1,4 +1,5 @@
 #include "thorcam.h"
+#include <cstring>
 
 /*! \fn ThorCam::~ThorCam()
     
@@ -161,6 +162,24 @@ void ThorCam::SetGain(const double gain_db)
 */
 int ThorCam::Connect(std::string ID)
 {
+    if (!isDLLOpen || !isSDKOpen) {
+        InitializedDLL();
+    }
+
+    if (!isDiscover) {
+        char buffer[256];
+        int result = tl_camera_discover_available_cameras(buffer, sizeof(buffer));
+        if (result != 0) {
+            // deal with error "Failed to discover camera"
+            std::cerr << "Thorlab :: Failed to discover camera : " << tl_camera_get_last_error()
+                      << std::endl;
+            isDiscover = false;
+            CloseRessources(); // is it obligated ?
+            return -2;
+        }
+        isDiscover = true;
+    }
+
     if (!isConnected) {
         // Connect to the camera (get a handle to it).
         int result = tl_camera_open_camera((char *) ID.c_str(), &handle);
@@ -224,9 +243,11 @@ CamNamesIDs ThorCam::SearchCam()
         // deal with error "Failed to discover camera"
         std::cerr << "Thorlab :: Failed to discover camera : " << tl_camera_get_last_error()
                   << std::endl;
+        isDiscover = false;
         CloseRessources(); // is it obligated ?
         return name_id;
     }
+    isDiscover = true;
     std::string camera_ids = buffer;
 
     // Check for no camera
@@ -379,7 +400,7 @@ void ThorCam::LoadGain()
         return;
     }
     min_gain = (double) minGain_int / 10.0;
-    max_gain = (double) minGain_int / 10.0;
+    max_gain = (double) maxGain_int / 10.0;
 }
 
 /*! \fn void ThorCam::LoadExposure()
@@ -403,13 +424,13 @@ void ThorCam::LoadExposure()
     max_exposure = max_exposure_temp;
 }
 
-/*! \fn void ThorCam::LoadInfo()
+/*! \fn void ThorCam::LoadSensorInfo()
     
-    ThorCam specific implementation to load all relevant camera infos.
+    ThorCam specific implementation to load Sensor info.
     Errors are logged.
 
 */
-void ThorCam::LoadInfo()
+void ThorCam::LoadSensorInfo()
 {
     int result = tl_camera_get_sensor_height(handle, &sensorHeight_px);
     if (result != 0) {
@@ -438,6 +459,19 @@ void ThorCam::LoadInfo()
                   << std::endl;
         return;
     }
+}
+
+/*! \fn void ThorCam::LoadInfo()
+    
+    ThorCam specific implementation to load all relevant camera infos.
+    Errors are logged.
+
+*/
+void ThorCam::LoadInfo()
+{
+    LoadGain();
+    LoadExposure();
+    LoadSensorInfo();
 }
 
 /*! \fn void ThorCam::SetTrigger(TRIGGER trig) {}
@@ -568,5 +602,10 @@ void ThorCam::FrameAvailableCallback(void *sender,
 {
     std::clog << "Thorlab :: FrameAvailabelCallback called !" << std::endl;
     ThorCam *ctx = (ThorCam *) context;
+    QMutexLocker locker(ctx->m_mutex);
+    memcpy(ctx->temp_image_buffer,
+           image_buffer,
+           (sizeof(unsigned short) * ctx->sensorHeight_px * ctx->sensorWidth_px));
     ctx->isFirstFrameFinished = true;
+    emit ctx->frameReady();
 }

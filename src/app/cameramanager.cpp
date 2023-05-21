@@ -69,6 +69,9 @@ void CameraManager::DiscoverCameras()
     std::clog << "CameraManager :: DiscoverCamera. Thread : " << QThread::currentThreadId()
               << std::endl;
     CamNamesIDs names_ids;
+    camera_list.id.clear();
+    camera_list.name.clear();
+    camera_list.type.clear();
     // Loop over all suported camera types
     for (int type = THORLABS; type != CAMTYPE_LAST; type++) {
         switch (type) {
@@ -123,14 +126,20 @@ void CameraManager::CameraConnect(int id)
         }
         if (result < 0) {
             std::cerr << "CameraManager :: CameraConect. Erreur connecting camera" << std::endl;
+            delete camera;
             isCamera = false;
             emit signal_FailledCamConnect();
+            QThread::currentThread()->quit();
             return;
         }
+        camera->Initialize();
         emit signal_EndOfCamConnect(camera);
+        QThread::currentThread()->quit();
+        return;
     }
 
     std::cerr << "CameraManager :: CameraConect. Out of bound Id for connecting Camera"
               << std::endl;
     emit signal_FailledCamConnect();
+    QThread::currentThread()->quit();
 }

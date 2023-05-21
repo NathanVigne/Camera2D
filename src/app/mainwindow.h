@@ -8,10 +8,13 @@
 #include <QLabel>
 #include <QLayout>
 #include <QMainWindow>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpacerItem>
+#include "gldisplay.h"
 #include "icamera.h"
 #include <iostream>
 
@@ -28,13 +31,37 @@ public:
     ~MainWindow();
 
 public slots:
-    void debugConnect(ICamera *camera);
+    void callBackDraw();
+
+    void slot_CameraOpen(ICamera *camera);
+
+    // Push Button slots
+    void slot_Start();
+    void slot_Stop();
+    void slot_SingleShot();
+    void slot_Export();
+    void slot_Quit();
+    void slot_ResetZoom();
+
+    // Gain slot
+    void slot_Gain(double newGain);
+
+    // Exposure slot
+    void slot_Exposure(int newExposure);
+
+    // Color slots
+    // TO DO
+
+    // Check Box slots
+    // TO DO
 
 private:
-    //Ui::MainWindow *ui;
     void uiSetUp();
 
 private:
+    ICamera *cam = nullptr;
+    QMutex m_mutex;
+
     // ----------------------------------------
     // Central widget
     // ----------------------------------------
@@ -49,6 +76,7 @@ private:
     QPushButton *bSingleShot;
     QPushButton *bExport;
     QPushButton *bQuit;
+    QPushButton *bResetZoom;
 
     // Layouts + spacer
     QSpacerItem *sButtons;
@@ -81,7 +109,7 @@ private:
     // ----------------------------------------
     // Main display
     // ----------------------------------------
-    QGraphicsView *mainDisplay;
+    GLDisplay *mainDisplay;
 
     // ----------------------------------------
     // secondary display

@@ -70,7 +70,7 @@ void ConnectWindow::refresh()
 */
 void ConnectWindow::slot_cameraFound(CamList *names_list)
 {
-    QStringList out;
+    QStringList out = {};
     boutton_refresh->setDisabled(false);
     cam_name_display->clear();
     if (!names_list->name.empty()) {

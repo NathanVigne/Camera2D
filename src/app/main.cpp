@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     MainWindow mW;
 
     // Connect signals of camera connect Window
-    QObject::connect(&cW, &ConnectWindow::signal_cameraConnected, &mW, &MainWindow::debugConnect);
+    QObject::connect(&cW, &ConnectWindow::signal_cameraConnected, &mW, &MainWindow::slot_CameraOpen);
     QObject::connect(&cW,
                      &ConnectWindow::signal_Connect,
                      &camManager,
@@ -45,6 +45,6 @@ int main(int argc, char *argv[])
 
     cW.refresh();
     cW.show();
-    mW.show();
+    //mW.show();
     return a.exec();
 }

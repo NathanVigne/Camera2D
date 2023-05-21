@@ -30,6 +30,7 @@ private:
     bool isDLLOpen = false;
     bool isSDKOpen = false;
     bool isRunning = false;
+    bool isDiscover = false;
     bool isFirstFrameFinished = false;
 
     int InitializedDLL();
@@ -37,6 +38,7 @@ private:
 
     void LoadGain();
     void LoadExposure();
+    void LoadSensorInfo();
     void LoadInfo();
 
     void SetTrigger(TRIGGER trig);
