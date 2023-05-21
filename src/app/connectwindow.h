@@ -2,14 +2,14 @@
 #define CONNECTWINDOW_H
 
 #include <QComboBox>
-#include <QDebug>
 #include <QEvent>
 #include <QLabel>
 #include <QPushButton>
 #include <QStringList>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <thorlabs.h>
+#include "cameramanager.h"
+#include "icamera.h"
 
 class ConnectWindow : public QWidget
 {
@@ -24,8 +24,8 @@ public:
 
 public slots:
     // slot for receiving info from cam loader
-    void slot_cameraFound(CameraNameId *names_ids);
-    void slot_cameraConnect(void *camera_handle);
+    void slot_cameraFound(CamList *names_list);
+    void slot_cameraConnect(ICamera *camera);
     void slot_failledCamConnect();
 
 private slots:
@@ -39,7 +39,7 @@ signals:
     void signal_Refresh();
 
     // signal to send when a camera is connected
-    void signal_cameraConnected(void *);
+    void signal_cameraConnected(ICamera *);
 
 private:
     QPushButton *boutton_connect;

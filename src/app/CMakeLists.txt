@@ -2,29 +2,27 @@ set(PROJECT_SOURCES
     main.cpp
     mainwindow.cpp
     connectwindow.cpp
-    camloader.cpp
+    cameramanager.cpp
+    gldisplay.cpp
 )
 
 set(PROJECT_HEADERS
     mainwindow.h
     connectwindow.h
-    camloader.h
-
-)
-
-set(PROJECT_UI
-    mainwindow.ui
+    icamera.h
+    cameramanager.h
+    gldisplay.h
 )
 
 set(POJECT_RESSOURCES
     ${PROJECT_SOURCE_DIR}/ressources/ressources.qrc
+    shaders.qrc
 )
 
 qt_add_executable(Camera2D
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
     ${PROJECT_HEADERS}
-    ${PROJECT_UI}
     ${POJECT_RESSOURCES}
 )
 
@@ -36,9 +34,12 @@ add_custom_command(TARGET Camera2D POST_BUILD
 
 )
 
-                       #
+
 target_link_libraries(Camera2D PRIVATE
+    Qt6::Core
     Qt6::Widgets
+    Qt6::OpenGLWidgets
+    Qt6::OpenGL
     #Qt6::Concurrent
     thorlabs
 )

@@ -1,53 +1,50 @@
-#include "camloader.h"
+#include "cameramanager.h"
 #include "connectwindow.h"
 #include "mainwindow.h"
 
-#include <thorlabs.h>
-
 #include <QApplication>
 #include <QObject>
-#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    thor_intializeDLLs();
 
-    CamLoader loader;
+    CameraManager camManager;
     ConnectWindow cW;
     MainWindow mW;
 
-    // Connect signals of camera connect
-    QObject::connect(&cW, &ConnectWindow::signal_cameraConnected, &mW, &MainWindow::debugConnect);
+    // Connect signals of camera connect Window
+    QObject::connect(&cW, &ConnectWindow::signal_cameraConnected, &mW, &MainWindow::slot_CameraOpen);
     QObject::connect(&cW,
                      &ConnectWindow::signal_Connect,
-                     &loader,
-                     &CamLoader::slot_StartConnect,
+                     &camManager,
+                     &CameraManager::slot_StartConnect,
                      Qt::DirectConnection);
     QObject::connect(&cW,
                      &ConnectWindow::signal_Refresh,
-                     &loader,
-                     &CamLoader::slot_StartScan,
+                     &camManager,
+                     &CameraManager::slot_StartScan,
                      Qt::DirectConnection);
 
     // Connect signals of camera loader
-    QObject::connect(&loader,
-                     &CamLoader::signal_endOfCamScan,
+    QObject::connect(&camManager,
+                     &CameraManager::signal_EndOfCamScan,
                      &cW,
                      &ConnectWindow::slot_cameraFound,
                      Qt::QueuedConnection);
-    QObject::connect(&loader,
-                     &CamLoader::signal_endOfCamConnect,
+    QObject::connect(&camManager,
+                     &CameraManager::signal_EndOfCamConnect,
                      &cW,
                      &ConnectWindow::slot_cameraConnect,
                      Qt::QueuedConnection);
-    QObject::connect(&loader,
-                     &CamLoader::signal_failledCamConnect,
+    QObject::connect(&camManager,
+                     &CameraManager::signal_FailledCamConnect,
                      &cW,
                      &ConnectWindow::slot_failledCamConnect,
                      Qt::QueuedConnection);
 
     cW.refresh();
     cW.show();
+    //mW.show();
     return a.exec();
 }

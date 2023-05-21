@@ -1,5 +1,5 @@
 #include "connectwindow.h"
-#include <QThread>
+#include <iostream>
 
 /*!
     \fn ConnectWindow::ConnectWindow(QWidget *parent) : QWidget{parent}
@@ -37,7 +37,8 @@ ConnectWindow::ConnectWindow(QWidget *parent)
     connect(boutton_connect, SIGNAL(clicked()), this, SLOT(slot_connectClicked()));
     connect(boutton_refresh, SIGNAL(clicked()), this, SLOT(slot_refrechClicked()));
 
-    qDebug() << "ConnectWindow construct" << QThread::currentThreadId();
+    std::clog << "ConnecWindow :: Constructor. Thread : " << QThread::currentThreadId()
+              << std::endl;
 }
 
 /*!
@@ -67,19 +68,22 @@ void ConnectWindow::refresh()
     button to be clicked
 
 */
-void ConnectWindow::slot_cameraFound(CameraNameId *name_ids)
+void ConnectWindow::slot_cameraFound(CamList *names_list)
 {
+    QStringList out = {};
     boutton_refresh->setDisabled(false);
-
     cam_name_display->clear();
-    cam_name_display->insertItems(0, name_ids->camera_Name);
-    if (!name_ids->camera_Name.at(0).isEmpty()) {
+    if (!names_list->name.empty()) {
         boutton_connect->setDisabled(false);
-
         label->setText("Connect to selected camera");
+
+        for (size_t i = 0; i < names_list->name.size(); i++) {
+            out.append(names_list->name[i].c_str());
+        }
     } else {
         label->setText("No camera found !");
     }
+    cam_name_display->insertItems(0, out);
 }
 
 /*!
@@ -89,9 +93,9 @@ void ConnectWindow::slot_cameraFound(CameraNameId *name_ids)
     Pass the camera_handle along then close connect Window
 
 */
-void ConnectWindow::slot_cameraConnect(void *camera_handle)
+void ConnectWindow::slot_cameraConnect(ICamera *camera)
 {
-    emit signal_cameraConnected(camera_handle);
+    emit signal_cameraConnected(camera);
     this->close();
 }
 
@@ -118,7 +122,8 @@ void ConnectWindow::slot_connectClicked()
 {
     int id = cam_name_display->currentIndex();
     emit signal_Connect(id);
-    qDebug() << "ConnecWindow connect Clicked" << QThread::currentThreadId();
+    std::clog << "ConnecWindow :: ConnectClicked. Thread : " << QThread::currentThreadId()
+              << std::endl;
 }
 
 /*!

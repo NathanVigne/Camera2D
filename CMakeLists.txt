@@ -9,10 +9,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets)
 #find_package(Qt6 REQUIRED COMPONENTS Concurrent)
 
 add_subdirectory(src/app)
+#add_subdirectory(src/app/shd)
 add_subdirectory(src/thorlabs)
 
 
