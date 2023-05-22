@@ -11,6 +11,10 @@
  * Destructor of gldisplay. Make current OpenGL context 
  * then destroy vbo shader programm and texture
  */
+GLDisplay::GLDisplay(QWidget *parent)
+    : QOpenGLWidget(parent)
+{}
+
 GLDisplay::~GLDisplay()
 {
     makeCurrent();
@@ -26,23 +30,12 @@ GLDisplay::~GLDisplay()
  * Function to resize the window for full display
  * For that you can adject the zoom level ...
  * 
- * TO DO : Make it work / Fix it !!
+ * TO DO : Test when zoom on cursor is working !
  */
 void GLDisplay::resetZoom()
 {
-    float zoom_ = 0;
-
-    //Calculate zoom level needed
-    if (width() > textures->width()) {
-        // if window width bigger than texture width set zoom level for height !
-        zoom_ = float(textures->height()) / float(height());
-    } else {
-        // if window width smaller than texture width set zoom level for width !
-        zoom_ = float(textures->width()) / float(width());
-    }
-
+    zoom = 1;
     scale.setToIdentity();
-    scale.scale(1 / zoom_);
     translation.setToIdentity();
     update();
 }
@@ -74,8 +67,8 @@ void GLDisplay::wheelEvent(QWheelEvent *e)
     float old_zoom = zoom;
     zoom = zoom + numSteps.y() * 0.05;
 
-    if (zoom >= 2) {
-        zoom = 2.0;
+    if (zoom >= 5) {
+        zoom = 5.0;
     }
     if (zoom <= 0.5) {
         zoom = 0.5;
@@ -86,7 +79,6 @@ void GLDisplay::wheelEvent(QWheelEvent *e)
 
     if (old_zoom != zoom) {
         QPointF mousePos = e->position();
-        QPointF mouseNDC = screenToNDC(&mousePos);
 
         float xnorm = (mousePos.x() - width() / 2) / (width() / 2);
         float ynorm = -(mousePos.y() - height() / 2) / (height() / 2);
@@ -96,18 +88,7 @@ void GLDisplay::wheelEvent(QWheelEvent *e)
         p4.setY(ynorm);
         p4.setZ(0.0);
         p4.setW(1.0);
-
-        QVector4D shift = projection.inverted() * scale.inverted() * p4;
-
-        QPointF mouseNDCScale = shift.toPointF();
-
-        float dx = mouseNDCScale.x() - mouseNDC.x();
-        float dy = mouseNDCScale.y() - mouseNDC.y();
-
-        croix = croix + QPointF(dx, dy);
     }
-
-    e->accept();
     update();
 }
 
@@ -121,11 +102,15 @@ void GLDisplay::wheelEvent(QWheelEvent *e)
 void GLDisplay::mousePressEvent(QMouseEvent *e)
 {
     QPointF mousePos = e->position();
-    lastPos = screenToNDC(&mousePos);
 
-    if (e->buttons() & Qt::LeftButton)
-        croix = lastPos;
-    update();
+    if (e->buttons() & Qt::LeftButton) {
+        croix = screenToNDCObject(&mousePos);
+        update();
+    }
+
+    if (e->buttons() & Qt::RightButton) {
+        lastPos = screenToNDC(&mousePos);
+    }
 }
 
 /*!
@@ -143,24 +128,49 @@ void GLDisplay::mouseMoveEvent(QMouseEvent *e)
 {
     QPointF mousePos = e->position();
     QPointF currentPos = screenToNDC(&mousePos);
+    QPointF currentPosObj = screenToNDCObject(&mousePos);
 
     float dx = currentPos.x() - lastPos.x();
     float dy = currentPos.y() - lastPos.y();
 
+    QMatrix4x4 denormTrans = projection.inverted() * translation;
+    denormTrans.translate(dx, dy);
+
     if (e->buttons() & Qt::LeftButton) {
-        // TO DO : Draw lines
-        croix = currentPos;
-    } else if (e->buttons() & Qt::RightButton) {
-        if (std::abs(translation.toTransform().dx() + dx) > 1.0
-            || std::abs(translation.toTransform().dy() + dy) > 1.0) {
-            translation.translate(0, 0);
-        } else {
-            translation.translate(dx, dy);
-            croix += QPointF(dx, dy);
-        }
+        croix = currentPosObj;
+        update();
+        return;
     }
-    lastPos = currentPos;
-    update();
+
+    // Not perfect but i can live with it
+    if (e->buttons() & Qt::RightButton) {
+        if (std::abs(denormTrans.toTransform().dx()) > zoom) {
+            if (std::abs(denormTrans.toTransform().dy()) > zoom) {
+                // X/Y Blocked
+                //
+                translation.translate(0, 0);
+            } else {
+                // X blocked
+                // Y OK
+                translation.translate(0, dy);
+                lastPos = QPointF(lastPos.x(), currentPos.y());
+            }
+        } else {
+            if (std::abs(denormTrans.toTransform().dy()) > zoom) {
+                // X OK
+                // Y Blocked
+                translation.translate(dx, 0);
+                lastPos = QPointF(currentPos.x(), lastPos.y());
+            } else {
+                // X/Y OK
+                //
+                translation.translate(dx, dy);
+                lastPos = currentPos;
+            }
+        }
+        lastPos = currentPos;
+        update();
+    }
 }
 
 /*!
@@ -189,13 +199,13 @@ void GLDisplay::initializeGL()
     initializeOpenGLFunctions();
 
     // Dark Gray background color
-    glClearColor(0.3, 0.3, 0.3, 0);
+    glClearColor(clearCol.redF(), clearCol.greenF(), clearCol.blueF(), 1);
 
     scale.setToIdentity();
     translation.setToIdentity();
 
     QPointF pf = QPointF(width() / 2, height() / 2);
-    croix = screenToNDC(&pf);
+    croix = screenToNDCObject(&pf);
 
     oldWidth = width();
     oldHeight = height();
@@ -226,7 +236,7 @@ void GLDisplay::paintGL()
 
     // Set modelview-projection matrix
     program->setUniformValue("mvp_matrix", projection * translation * scale);
-    program->setUniformValue("in_line", NDCToScreenOpengGL(&croix));
+    program->setUniformValue("in_line", NDCObjToScreenOpenGL(&croix));
     program->setUniformValue("myTexture", 0);
 
     // Draw
@@ -250,7 +260,6 @@ void GLDisplay::paintGL()
  * bound to the NDC spacec with the horital dimension allowing
  * to change for keeping the correct aspect ratio.
  * 
- * TO DO : Adjust witht the reset zoom ?
  */
 void GLDisplay::resizeGL(int width, int height)
 {
@@ -263,8 +272,15 @@ void GLDisplay::resizeGL(int width, int height)
     // Reset projection
     projection.setToIdentity();
 
-    // Set othro projection
-    projection.ortho(-1 * w_aspect / t_aspect, 1 * w_aspect / t_aspect, -1, 1, -1, 1);
+    if (w_aspect > t_aspect) {
+        // Set othro projection
+        projection.ortho(-1 * w_aspect / t_aspect, 1 * w_aspect / t_aspect, -1, 1, -1, 1);
+        std::clog << "W > H" << std::endl;
+    } else {
+        // Set othro projection
+        projection.ortho(-1, 1, -1 * t_aspect / w_aspect, 1 * t_aspect / w_aspect, -1, 1);
+        std::clog << "H > W" << std::endl;
+    }
 }
 
 /*!
@@ -340,7 +356,7 @@ void GLDisplay::initTexture()
     private_buffer = (unsigned short *) malloc(texWidth * texHeigth * sizeof(unsigned short));
     for (int i = 0; i < texWidth; ++i) {
         for (int j = 0; j < texHeigth; ++j) {
-            private_buffer[i * texHeigth + j] = (unsigned short) (0.3 * 1023);
+            private_buffer[i * texHeigth + j] = (unsigned short) (rand() % 1023);
         }
     }
 
@@ -425,6 +441,31 @@ QPointF GLDisplay::screenToNDC(QPointF *p)
 }
 
 /*!
+ * \brief GLDisplay::screenToNDCObject
+ * \param QPointF p pointer to a position in screen space 
+ * \return QPointF position in NDC Object spacec
+ * 
+ * Function to convert screen space in NDC space (taking the scaling matrix
+ * into account)
+ */
+QPointF GLDisplay::screenToNDCObject(QPointF *p)
+{
+    float xnorm = (p->x() - width() / 2) / (width() / 2);
+    float ynorm = -(p->y() - height() / 2) / (height() / 2);
+
+    QVector4D p4;
+    p4.setX(xnorm);
+    p4.setY(ynorm);
+    p4.setZ(0.0);
+    p4.setW(1.0);
+
+    QMatrix4x4 trans = projection * translation * scale;
+    QVector4D shift = trans.inverted() * p4;
+
+    return shift.toPointF();
+}
+
+/*!
  * \brief GLDisplay::NDCToScreen
  * \param QPointF p pointer to a position in NDC space
  * \return QPoint position in screen space (top left corner 0,0)
@@ -443,6 +484,29 @@ QPoint GLDisplay::NDCToScreen(QPointF *p)
 
     int xScreen = (pv.x() * (width() / 2)) + (width() / 2);
     int yScreen = (-pv.y() * (height() / 2)) + (height() / 2);
+
+    return QPoint(xScreen, yScreen);
+}
+
+/*!
+ * \brief GLDisplay::NDCObjToScreen
+ * \param QPointF p pointer to a position in NDC Object space
+ * \return QPoint position in screen space (lower left corner 0,0)
+ * 
+ * function to convert NDC in screen space ROI in top left corner
+ */
+QPoint GLDisplay::NDCObjToScreenOpenGL(QPointF *p)
+{
+    QVector4D p4;
+    p4.setX(p->x());
+    p4.setY(p->y());
+    p4.setZ(0.0);
+    p4.setW(1.0);
+
+    QVector4D pv = projection * translation * scale * p4;
+
+    int xScreen = (pv.x() * (width() / 2)) + (width() / 2);
+    int yScreen = (pv.y() * (height() / 2)) + (height() / 2);
 
     return QPoint(xScreen, yScreen);
 }

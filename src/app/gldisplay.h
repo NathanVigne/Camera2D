@@ -18,6 +18,7 @@ class GLDisplay : public QOpenGLWidget, protected QOpenGLFunctions
 
 public:
     using QOpenGLWidget::QOpenGLWidget;
+    GLDisplay(QWidget *parent);
     ~GLDisplay();
 
     void resetZoom();
@@ -47,11 +48,13 @@ signals:
     void clicked();
 
 private:
-    int texWidth;
-    int texHeigth;
+    int texWidth = 1200;
+    int texHeigth = 1000;
 
     QPointF screenToNDC(QPointF *p);
+    QPointF screenToNDCObject(QPointF *p);
     QPoint NDCToScreen(QPointF *p);
+    QPoint NDCObjToScreenOpenGL(QPointF *p);
     QPoint NDCToScreenOpengGL(QPointF *p);
 
     QOpenGLTexture *textures = nullptr;
@@ -62,8 +65,10 @@ private:
     QMatrix4x4 scale;
     QMatrix4x4 translation;
 
+    QColor clearCol = QColor(100, 100, 100);
     float zoom = 1.0;
     QPointF lastPos;
+    QPointF lastPosObj;
     QPointF croix;
     int oldWidth;
     int oldHeight;
