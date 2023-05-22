@@ -10,6 +10,7 @@
 #include <QWidget>
 #include "cameramanager.h"
 #include "icamera.h"
+#include <iostream>
 
 class ConnectWindow : public QWidget
 {

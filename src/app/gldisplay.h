@@ -10,6 +10,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLWidget>
+#include <iostream>
 
 class GLDisplay : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -20,10 +21,13 @@ public:
     ~GLDisplay();
 
     void resetZoom();
-    void setTexture(unsigned short *bufferT, QMutex *mutex);
+    void setTexture(unsigned short *buffer, QMutex *mutex);
 
-    int texWidth;
-    int texHeigth;
+    // public getter/setter to get image widht and heiht
+    int getTexHeigth() const;
+    int getTexWidth() const;
+    void setTexWidth(int newTexWidth);
+    void setTexHeigth(int newTexHeigth);
 
 protected:
     void wheelEvent(QWheelEvent *e) override;
@@ -43,6 +47,9 @@ signals:
     void clicked();
 
 private:
+    int texWidth;
+    int texHeigth;
+
     QPointF screenToNDC(QPointF *p);
     QPoint NDCToScreen(QPointF *p);
     QPoint NDCToScreenOpengGL(QPointF *p);
@@ -61,7 +68,7 @@ private:
     int oldWidth;
     int oldHeight;
 
-    unsigned short *buffer;
+    unsigned short *private_buffer;
 };
 
 #endif // GLDISPLAY_H

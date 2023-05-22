@@ -48,10 +48,8 @@ signals:
 
 private:
     CamList camera_list;
-
     ICamera *camera;
     bool isCamera = false;
-
     QThread thread;
 };
 

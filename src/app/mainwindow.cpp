@@ -1,5 +1,13 @@
 #include "mainwindow.h"
 
+/*!
+ * \brief MainWindow::MainWindow
+ * \param QWidget *parent
+ * 
+ * Mainwindow constructor. Setup the UI / Icon / Title ...
+ * Manage the connection for all camera cotrols
+ * 
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -28,17 +36,39 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rbSatColor, &QRadioButton::toggled, this, &MainWindow::slot_Color);
 }
 
-MainWindow::~MainWindow()
-{
-    //delete ui;
-}
+/*!
+ * \brief MainWindow::~MainWindow
+ * 
+ * MainWindow destructor, nothing to do ! (Sure ??)
+ * 
+ */
+MainWindow::~MainWindow() {}
 
+/*!
+ * \brief MainWindow::callBackDraw
+ * 
+ * CallBack function called to draw on the GLDisplay !
+ * 
+ */
 void MainWindow::callBackDraw()
 {
     mainDisplay->setTexture(cam->temp_image_buffer, &m_mutex);
     mainDisplay->update();
 }
 
+/*!
+ * \brief MainWindow::slot_CameraOpen
+ * \param ICamer *camera 
+ * \param CAMERATYPE type
+ * 
+ * Public slot called when we connect to a camera in the connect window.
+ * 
+ * This function also set the camera control for the specified camera
+ * 
+ * TO DO : refactor for more handling all camera TYPE
+ * maybe in a generic way ?!
+ * 
+ */
 void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 {
     cam = camera;
@@ -67,52 +97,116 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     cam->m_mutex = &m_mutex;
 
     connect(cam, &ICamera::frameReady, this, &MainWindow::callBackDraw);
-    mainDisplay->texHeigth = cam->getSensorHeigth();
-    mainDisplay->texWidth = cam->getSensorWidth();
+    mainDisplay->setTexHeigth(cam->getSensorHeigth());
+    mainDisplay->setTexWidth(cam->getSensorWidth());
     this->show();
 }
 
+/*!
+ * \brief MainWindow::slot_Start
+ * 
+ * Public slot called when the start button is push. Call the start function
+ * of the ICamera !
+ * 
+ */
 void MainWindow::slot_Start()
 {
     std::clog << "Start Clicked" << std::endl;
     cam->Start();
 }
 
+/*!
+ * \brief MainWindow::slot_Stop
+ * 
+ * Public slot called when the stop button is push. Call the stop function
+ * of the ICamera !
+ */
 void MainWindow::slot_Stop()
 {
     std::clog << "Stop Clicked" << std::endl;
     cam->Stop();
 }
 
+/*!
+ * \brief MainWindow::slot_SingleShot
+ *
+ * Public slot called when the SingleShot button is push. Call the SingleShot function
+ * of the ICamera !
+ * 
+ */
 void MainWindow::slot_SingleShot()
 {
     std::clog << "Single Shot Clicked" << std::endl;
     cam->SingleShot();
 }
 
+/*!
+ * \brief MainWindow::slot_Export
+ * 
+ * Public slot called when the Export button is push.
+ * 
+ * TO DO : implement to the export functionalllty
+ * 
+ */
 void MainWindow::slot_Export()
 {
     std::clog << "Export Clicked" << std::endl;
 }
 
+/*!
+ * \brief MainWindow::slot_Quit
+ * 
+ * Public slot called when the Quit button is push. Close the window.
+ * If it is the last window then the application will quit and all cleanup
+ * should be done by all classes.
+ * 
+ * TO DO : Think of a way to always close the application and force cleanup ?
+ * 
+ */
 void MainWindow::slot_Quit()
 {
     std::clog << "Quit Clicked" << std::endl;
     close();
 }
 
+/*!
+ * \brief MainWindow::slot_ResetZoom
+ * 
+ * Public slot called whenthe reset zoom button is push. Call the reset zoom
+ * function of the mainDisplay
+ * 
+ */
 void MainWindow::slot_ResetZoom()
 {
     std::clog << "ResetZoom Clicked" << std::endl;
     mainDisplay->resetZoom();
 }
 
+/*!
+ * \brief MainWindow::slot_Gain
+ * \param double newGain
+ * 
+ * Public slot called when the gain in changed in the doublespinbox.
+ * Set the newGain to the ICamera.
+ * 
+ */
 void MainWindow::slot_Gain(double newGain)
 {
     std::clog << "New Gain : " << newGain << std::endl;
     cam->SetGain(newGain);
 }
 
+/*!
+ * \brief MainWindow::slot_Exposure
+ * \param int newExposure
+ * 
+ * Public slot called when the exposure is change on the horizontal slider.
+ * Set the new exposure to the camera ! Also ask the camera what it's new 
+ * exposure to display the value.
+ * 
+ * TO DO : Generic implement for all camera to not be reliant on CAMERATYPE !
+ * 
+ */
 void MainWindow::slot_Exposure(int newExposure)
 {
     float value;
@@ -132,6 +226,19 @@ void MainWindow::slot_Exposure(int newExposure)
     labelExposure->setText(str);
 }
 
+/*!
+ * \brief MainWindow::slot_Color
+ * \param bool check
+ * 
+ * Public slot called when a radio button is toggled
+ * 
+ * TO DO : implement the color change in main Display
+ * 
+ * TO DO : function called twice (once for the turn off of the previous
+ * radio button then for the turn on of the other) think of a way for 
+ * having a single call !
+ * 
+ */
 void MainWindow::slot_Color(bool check)
 {
     if (rbMonochrome->isChecked()) {
@@ -145,7 +252,9 @@ void MainWindow::slot_Color(bool check)
 
 /*!
  * \brief MainWindow::uiSetUp
- * function to setup the ui of the main window
+ * 
+ * function to set-up all the widget of the mainWindow
+ * 
  */
 void MainWindow::uiSetUp()
 {
@@ -197,6 +306,8 @@ void MainWindow::uiSetUp()
     lColors->addWidget(rbMonochrome);
     lColors->addWidget(rbSatMonochrome);
     lColors->addWidget(rbSatColor);
+    lColors->setSpacing(0);
+    lColors->setContentsMargins(10, 0, 10, 0);
     gbColor->setLayout(lColors);
 
     lGain = new QVBoxLayout();

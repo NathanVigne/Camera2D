@@ -1,5 +1,4 @@
 #include "connectwindow.h"
-#include <iostream>
 
 /*!
     \fn ConnectWindow::ConnectWindow(QWidget *parent) : QWidget{parent}
@@ -34,8 +33,8 @@ ConnectWindow::ConnectWindow(QWidget *parent)
     v_layout->addLayout(h_layout);
     v_layout->addSpacing(30);
 
-    connect(boutton_connect, SIGNAL(clicked()), this, SLOT(slot_connectClicked()));
-    connect(boutton_refresh, SIGNAL(clicked()), this, SLOT(slot_refrechClicked()));
+    connect(boutton_connect, &QPushButton::clicked, this, &ConnectWindow::slot_connectClicked);
+    connect(boutton_refresh, &QPushButton::clicked, this, &ConnectWindow::slot_refrechClicked);
 
     std::clog << "ConnecWindow :: Constructor. Thread : " << QThread::currentThreadId()
               << std::endl;
@@ -90,7 +89,7 @@ void ConnectWindow::slot_cameraFound(CamList *names_list)
     \fn void ConnectWindow::slot_cameraConnect()
 
     public slot called when the camloder succesfully connect with a camera.
-    Pass the camera_handle along then close connect Window
+    Pass the camera_handle and CAMERA type along then close connect Window
 
 */
 void ConnectWindow::slot_cameraConnect(ICamera *camera, CAMERATYPE type)

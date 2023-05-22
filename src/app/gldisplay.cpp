@@ -1,5 +1,5 @@
 #include "gldisplay.h"
-#include <iostream>
+
 #include <random>
 
 #define PROGRAM_VERTEX_ATTRIBUTE 0
@@ -19,13 +19,14 @@ GLDisplay::~GLDisplay()
     delete program;
     doneCurrent();
 }
+
 /*!
  * \brief GLDisplay::resetZoom
  * 
  * Function to resize the window for full display
  * For that you can adject the zoom level ...
  * 
- * TO DO : Fix it !!
+ * TO DO : Make it work / Fix it !!
  */
 void GLDisplay::resetZoom()
 {
@@ -49,14 +50,13 @@ void GLDisplay::resetZoom()
 /*!
  * \brief GLDisplay::setTexture
  * \param unsigned short *buffer pointer to the data from the camera
+ * \param QMutex *mutex pointer to the mutex for locking buffer 
  */
-void GLDisplay::setTexture(unsigned short *bufferT, QMutex *mutex)
+void GLDisplay::setTexture(unsigned short *buffer, QMutex *mutex)
 {
     QMutexLocker locker(mutex);
-
-    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, bufferT);
-
-    std::clog << "GlDispay : Set Texture : test Value : " << bufferT[400] << std::endl;
+    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
+    std::clog << "GlDispay : Set Texture : test Value : " << buffer[400] << std::endl;
 }
 
 /*!
@@ -188,7 +188,8 @@ void GLDisplay::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    glClearColor(1, 1, 1, 0);
+    // Dark Gray background color
+    glClearColor(0.3, 0.3, 0.3, 0);
 
     scale.setToIdentity();
     translation.setToIdentity();
@@ -204,8 +205,10 @@ void GLDisplay::initializeGL()
     initTexture();
 
     glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Not used with camera
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 /*!
@@ -219,20 +222,11 @@ void GLDisplay::initializeGL()
 void GLDisplay::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
     textures->bind();
-
-    // Calculate model view transformation
-
-    //scale.scale(0.2);
-
-    //translation.translate(1.0, 0.0, 0.0);
 
     // Set modelview-projection matrix
     program->setUniformValue("mvp_matrix", projection * translation * scale);
-
     program->setUniformValue("in_line", NDCToScreenOpengGL(&croix));
-
     program->setUniformValue("myTexture", 0);
 
     // Draw
@@ -255,6 +249,8 @@ void GLDisplay::paintGL()
  * aspect ratio of the texture unsing the projection matrix
  * bound to the NDC spacec with the horital dimension allowing
  * to change for keeping the correct aspect ratio.
+ * 
+ * TO DO : Adjust witht the reset zoom ?
  */
 void GLDisplay::resizeGL(int width, int height)
 {
@@ -330,7 +326,8 @@ void GLDisplay::initShaders()
 /*!
  * \brief GLDisplay::initTexture
  * 
- * Function to initialize the texture
+ * Function to initialize the private buffer to the clear color
+ * This image will be the the one displayed before camera start evnet
  * 
  * for thorlabs camera to an array of unsigned short
  * For test purpose this array is currently random value
@@ -339,24 +336,69 @@ void GLDisplay::initShaders()
  */
 void GLDisplay::initTexture()
 {
-    // Init texture to random values
-    buffer = (unsigned short *) malloc(texWidth * texHeigth * sizeof(unsigned short));
+    // Init the private buffer to dark gray (clear  color)
+    private_buffer = (unsigned short *) malloc(texWidth * texHeigth * sizeof(unsigned short));
     for (int i = 0; i < texWidth; ++i) {
         for (int j = 0; j < texHeigth; ++j) {
-            buffer[i * texHeigth + j] = (unsigned short) (rand() % 65535);
+            private_buffer[i * texHeigth + j] = (unsigned short) (0.3 * 1023);
         }
     }
 
+    // Set-up for Thorlabs camera
     textures = new QOpenGLTexture(QOpenGLTexture::Target2D);
-
     textures->setMinificationFilter(QOpenGLTexture::Nearest);
     textures->setMagnificationFilter(QOpenGLTexture::Nearest);
     textures->setFormat(QOpenGLTexture::R16U);
     textures->setSize(texWidth, texHeigth);
     textures->setMipLevels(10);
     textures->allocateStorage(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16);
-    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
-    //textures = new QOpenGLTexture(QImage(QString(":/test_image.png")).mirrored());
+    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, private_buffer);
+}
+
+/*!
+ * \brief GLDisplay::setTexHeigth
+ * \param newTexHeigth
+ * 
+ * Setter for property texHeight
+ * 
+ */
+void GLDisplay::setTexHeigth(int newTexHeigth)
+{
+    texHeigth = newTexHeigth;
+}
+
+/*!
+ * \brief GLDisplay::setTexWidth
+ * \param newTexWidth
+ * 
+ * Setter for property texWidth
+ * 
+ */
+void GLDisplay::setTexWidth(int newTexWidth)
+{
+    texWidth = newTexWidth;
+}
+
+/*!
+ * \brief GLDisplay::getTexWidth
+ * \return texWidth
+ * 
+ * Getter function for texWidth property
+ */
+int GLDisplay::getTexWidth() const
+{
+    return texWidth;
+}
+
+/*!
+ * \brief GLDisplay::getTexHeigth
+ * \return texHeight
+ * 
+ *  Getter function for texHeight property
+ */
+int GLDisplay::getTexHeigth() const
+{
+    return texHeigth;
 }
 
 /*!

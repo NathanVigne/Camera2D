@@ -10,8 +10,8 @@
 CameraManager::CameraManager(QObject *parent)
     : QObject(parent)
 {
-    connect(this, SIGNAL(signal_StartScan()), this, SLOT(DiscoverCameras()));
-    connect(this, SIGNAL(signal_StartConnect(int)), this, SLOT(CameraConnect(int)));
+    connect(this, &CameraManager::signal_StartScan, this, &CameraManager::DiscoverCameras);
+    connect(this, &CameraManager::signal_StartConnect, this, &CameraManager::CameraConnect);
     moveToThread(&thread);
     std::clog << "CameraManager :: Contructor. Thread : " << QThread::currentThreadId()
               << std::endl;

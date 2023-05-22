@@ -45,6 +45,6 @@ int main(int argc, char *argv[])
 
     cW.refresh();
     cW.show();
-    //mW.show();
+    mW.show();
     return a.exec();
 }

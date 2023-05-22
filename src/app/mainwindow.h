@@ -19,10 +19,6 @@
 #include "icamera.h"
 #include <iostream>
 
-//QT_BEGIN_NAMESPACE
-//namespace Ui { class MainWindow; }
-//QT_END_NAMESPACE
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -32,8 +28,9 @@ public:
     ~MainWindow();
 
 public slots:
-    void callBackDraw();
 
+    // Drawing slots
+    void callBackDraw();
     void slot_CameraOpen(ICamera *camera, CAMERATYPE type);
 
     // Push Button slots
