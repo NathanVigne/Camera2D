@@ -365,8 +365,10 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     // secondary display
     // ----------------------------------------
-    xcutDisplay = new QGraphicsView(this);
-    ycutDisplay = new QGraphicsView(this);
+    //xcutDisplay = new QGraphicsView(this);
+    //ycutDisplay = new QGraphicsView(this);
+    xcutDisplay = new myChart(this);
+    ycutDisplay = new myChart(this);
 
     // Group Boxes
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
@@ -389,6 +391,7 @@ void MainWindow::uiSetUp()
     lSecondaryDisplay->addWidget(xcutDisplay);
     lSecondaryDisplay->addWidget(ycutDisplay);
     lSecondaryDisplay->addWidget(labelInfo);
+    //lSecondaryDisplay->setContentsMargins(0, 0, 0, 0);
 
     gbSecondaryDisplay->setLayout(lSecondaryDisplay);
 

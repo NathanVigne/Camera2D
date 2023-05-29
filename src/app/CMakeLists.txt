@@ -5,6 +5,7 @@ set(PROJECT_SOURCES
     cameramanager.cpp
     gldisplay.cpp
     exportwindow.cpp
+    mychart.cpp
 )
 
 set(PROJECT_HEADERS
@@ -14,6 +15,7 @@ set(PROJECT_HEADERS
     cameramanager.h
     gldisplay.h
     exportwindow.h
+    mychart.h
 )
 
 set(POJECT_RESSOURCES
@@ -42,6 +44,7 @@ target_link_libraries(Camera2D PRIVATE
     Qt6::Widgets
     Qt6::OpenGLWidgets
     Qt6::OpenGL
+    Qt6::Charts
     #Qt6::Concurrent
     thorlabs
 )

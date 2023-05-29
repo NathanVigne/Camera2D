@@ -18,6 +18,7 @@
 #include "exportwindow.h"
 #include "gldisplay.h"
 #include "icamera.h"
+#include "mychart.h"
 #include <iostream>
 #include <mutex>
 
@@ -127,8 +128,10 @@ private:
     // ----------------------------------------
     // secondary display
     // ----------------------------------------
-    QGraphicsView *xcutDisplay;
-    QGraphicsView *ycutDisplay;
+    //QGraphicsView *xcutDisplay;
+    myChart *xcutDisplay;
+    //QGraphicsView *ycutDisplay;
+    myChart *ycutDisplay;
 
     // Group Boxes
     QGroupBox *gbSecondaryDisplay;
