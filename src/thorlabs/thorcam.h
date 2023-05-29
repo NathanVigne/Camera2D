@@ -28,6 +28,8 @@ public:
 
     // callback
     void setFrameReadyCallback(std::function<void()> frameReadyCallback) override;
+    void setDisconnectCbck(std::function<void()> disconnectCbck) override;
+    void setConnectCbck(std::function<void()> connectCbck) override;
 
 private:
     // Specific Thorlabs mehtods and properties

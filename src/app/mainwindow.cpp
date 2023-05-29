@@ -36,6 +36,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rbSatColor, &QRadioButton::toggled, this, &MainWindow::slot_Color);
 
     connect(this, &MainWindow::frameReady, this, &MainWindow::callBackDraw, Qt::QueuedConnection);
+    connect(this,
+            &MainWindow::camDisconnect,
+            this,
+            &MainWindow::displayDisconnect,
+            Qt::QueuedConnection);
+    connect(this,
+            &MainWindow::camReConnect,
+            this,
+            &MainWindow::displayReConnect,
+            Qt::QueuedConnection);
 }
 
 /*!
@@ -107,6 +117,8 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 
     // connect callback for drawing
     cam->setFrameReadyCallback([this]() { this->sendFrameReady(); });
+    cam->setDisconnectCbck([this]() { this->sendDisconnect(); });
+    cam->setConnectCbck([this]() { this->sendReConnect(); });
 
     // Show display
     rbMonochrome->setChecked(true);
@@ -405,7 +417,75 @@ void MainWindow::uiSetUp()
     setCentralWidget(window);
 }
 
+/*!
+ * \brief MainWindow::sendFrameReady
+ * 
+ * slot colled when frame is ready
+ * emit the frameready signal to draw frame
+ * 
+ */
 void MainWindow::sendFrameReady()
 {
     emit frameReady();
+}
+
+/*!
+ * \brief MainWindow::sendDisconnect
+ * 
+ * slot called when cam is disconnected
+ * emit camdisco signal
+ * 
+ */
+void MainWindow::sendDisconnect()
+{
+    std::clog << "MainWindow :: cam disconnected" << std::endl;
+    emit camDisconnect();
+}
+
+/*!
+ * \brief MainWindow::sendReConnect
+ * 
+ * slot called when cam is reconnected
+ * emit camReco signal
+ * 
+ */
+void MainWindow::sendReConnect()
+{
+    std::clog << "MainWindow :: cam reconnected" << std::endl;
+    emit camReConnect();
+}
+
+/*!
+ * \brief MainWindow::displayDisconnect
+ * 
+ * slot called when cam is disconnected
+ * open msgbox !
+ * 
+ */
+void MainWindow::displayDisconnect()
+{
+    msg = new QMessageBox;
+    msg->setWindowIcon(QIcon(":/icon/cam_ico.png"));
+    msg->setIcon(QMessageBox::Critical);
+    msg->setText("Camera is disconnect !\n Please reconnect the camera.");
+    msg->setWindowTitle("Error");
+    msg->exec();
+}
+
+/*!
+ * \brief MainWindow::displayReConnect
+ * 
+ * slot called when cam is reconnected
+ * reload the cam handler & close msgbox ?
+ * 
+ */
+void MainWindow::displayReConnect()
+{
+    std::clog << "MainWindow :: cam reconnected TO DO stuff ?" << std::endl;
+    slot_Exposure(sliderExposure->value());
+    slot_Gain(dsbGain->value());
+    if (isRunning) {
+        cam->Start();
+    }
+    msg->close();
 }

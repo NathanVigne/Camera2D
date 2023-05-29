@@ -354,6 +354,32 @@ void ThorCam::setFrameReadyCallback(std::function<void()> frameReadyCallback)
     m_frameReadyCallback = frameReadyCallback;
 }
 
+/*!
+ * \brief ThorCam::setDisconnectCbck
+ * \param disconnectCbck
+ * 
+ * Setting the callback for when cam is disconnect.
+ * the callback function must be set in mainWindow or mainDisplay
+ * 
+ */
+void ThorCam::setDisconnectCbck(std::function<void()> disconnectCbck)
+{
+    m_disconnectCbck = disconnectCbck;
+}
+
+/*!
+ * \brief ThorCam::setConnectCbck
+ * \param connectCbck
+ *
+ * Setting the callback for when cam is connected.
+ * the callback function must be set in mainWindow or mainDisplay
+ * 
+ */
+void ThorCam::setConnectCbck(std::function<void()> connectCbck)
+{
+    m_connectCbck = connectCbck;
+}
+
 /*! \fn int ThorCam::InitializedDLL()
     
     ThorCam specific implementation to open all ressources (DLL and SDK).
@@ -630,6 +656,18 @@ void ThorCam::CameraConnectCallback(char *cameraSerialNumber,
                                     void *context)
 {
     std::clog << "Thorlab :: ConnectCallback called !" << std::endl;
+    ThorCam *th;
+    th = (ThorCam *) context;
+    std::string id(cameraSerialNumber);
+    int result = th->Connect(id);
+    if (result == 0) {
+        std::clog << "Reconnect succes" << std::endl;
+        th->Initialize();
+        th->m_connectCbck();
+        // need to emit signal for reloading all handles !?
+    } else {
+        std::clog << "Reconnect fail" << std::endl;
+    }
 }
 
 /*! \fn void ThorCam::CameraDisconnectCallback(char *cameraSerialNumber, void *context)
@@ -640,6 +678,13 @@ void ThorCam::CameraConnectCallback(char *cameraSerialNumber,
 void ThorCam::CameraDisconnectCallback(char *cameraSerialNumber, void *context)
 {
     std::clog << "Thorlab :: DisconnectCallback called !" << std::endl;
+    std::clog << cameraSerialNumber << std::endl;
+    ThorCam *th;
+    th = (ThorCam *) context;
+    th->Disconnect();
+    th->isRunning = false;
+    th->isFirstFrameFinished = false;
+    th->m_disconnectCbck();
 }
 
 /*! \fn void ThorCam::FrameAvailabelCallback(void *sender,
@@ -668,5 +713,4 @@ void ThorCam::FrameAvailableCallback(void *sender,
            (sizeof(unsigned short) * ctx->sensorHeight_px * ctx->sensorWidth_px));
     ctx->isFirstFrameFinished = true;
     ctx->m_frameReadyCallback();
-    //emit ctx->frameReady();
 }

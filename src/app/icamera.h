@@ -49,6 +49,8 @@ public:
     BUFFTYPE getBuffType() { return buff_type; };
 
     virtual void setFrameReadyCallback(std::function<void()> frameReadyCallback) = 0;
+    virtual void setDisconnectCbck(std::function<void()> disconnectCbck) = 0;
+    virtual void setConnectCbck(std::function<void()> connectCbck) = 0;
 
     // TO DO : check usefullnes ?
     unsigned short *temp_image_buffer = nullptr;
@@ -56,6 +58,8 @@ public:
 protected:
     // callBack = emit signal when frame ready
     std::function<void()> m_frameReadyCallback;
+    std::function<void()> m_disconnectCbck;
+    std::function<void()> m_connectCbck;
 
     bool isConnected = false;
     void *handle = nullptr;

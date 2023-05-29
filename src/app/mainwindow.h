@@ -31,6 +31,8 @@ public:
 
 signals:
     void frameReady();
+    void camDisconnect();
+    void camReConnect();
 
 public slots:
 
@@ -61,12 +63,17 @@ public slots:
 private:
     void uiSetUp();
     void sendFrameReady();
+    void sendDisconnect();
+    void sendReConnect();
+    void displayDisconnect();
+    void displayReConnect();
 
 private:
     ICamera *cam = nullptr;
     bool isRunning = false;
     std::mutex m_mutex;
     CAMERATYPE cam_type;
+    QMessageBox *msg;
 
     // ----------------------------------------
     // Central widget
