@@ -34,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rbMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
     connect(rbSatMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
     connect(rbSatColor, &QRadioButton::toggled, this, &MainWindow::slot_Color);
+
+    connect(this, &MainWindow::frameReady, this, &MainWindow::callBackDraw, Qt::QueuedConnection);
 }
 
 /*!
@@ -71,15 +73,20 @@ void MainWindow::callBackDraw()
  */
 void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 {
+    // get came handle and type
     cam = camera;
-    cam_type = type;
     std::clog << "ICamera pointer : " << cam << std::endl;
+    cam_type = type;
+    mainDisplay->setBit_depth(cam->getBitDepth());
+    mainDisplay->setBuff_type(cam->getBuffType());
 
+    // Set Gain UI
     dsbGain->setMaximum(cam->getMaxGain());
     dsbGain->setMinimum(cam->getMinGain());
     dsbGain->setValue(cam->getMinGain());
     cam->SetGain(cam->getMinGain());
 
+    // Set exposure UI
     // in µs
     int min, max;
     if (cam_type == CAMERATYPE::THORLABS) {
@@ -94,9 +101,16 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     sliderExposure->setMaximum(max);
     sliderExposure->setValue((int) cam->getMinExposure());
     cam->SetExposure(cam->getMinExposure());
-    cam->m_mutex = &m_mutex;
 
-    connect(cam, &ICamera::frameReady, this, &MainWindow::callBackDraw);
+    // Set cam mutex
+    cam->setMutex(&m_mutex);
+
+    // connect callback for drawing
+    cam->setFrameReadyCallback([this]() { this->sendFrameReady(); });
+
+    // Show display
+    rbMonochrome->setChecked(true);
+    mainDisplay->setColorChoice(ColorChoice::MONO);
     mainDisplay->setTexHeigth(cam->getSensorHeigth());
     mainDisplay->setTexWidth(cam->getSensorWidth());
     this->show();
@@ -113,6 +127,7 @@ void MainWindow::slot_Start()
 {
     std::clog << "Start Clicked" << std::endl;
     cam->Start();
+    isRunning = true;
 }
 
 /*!
@@ -125,6 +140,7 @@ void MainWindow::slot_Stop()
 {
     std::clog << "Stop Clicked" << std::endl;
     cam->Stop();
+    isRunning = false;
 }
 
 /*!
@@ -138,6 +154,7 @@ void MainWindow::slot_SingleShot()
 {
     std::clog << "Single Shot Clicked" << std::endl;
     cam->SingleShot();
+    isRunning = false;
 }
 
 /*!
@@ -151,6 +168,13 @@ void MainWindow::slot_SingleShot()
 void MainWindow::slot_Export()
 {
     std::clog << "Export Clicked" << std::endl;
+    exportWindow *exW = new exportWindow;
+    exW->setIsRunning(isRunning);
+    exW->setColChoice(mainDisplay->getColorChoice());
+    exW->setCam(cam);
+    exW->setMutex(&m_mutex);
+    exW->show();
+    cam->Stop();
 }
 
 /*!
@@ -243,10 +267,13 @@ void MainWindow::slot_Color(bool check)
 {
     if (rbMonochrome->isChecked()) {
         std::clog << "ColorMonochrome" << std::endl;
+        mainDisplay->setColorChoice(ColorChoice::MONO);
     } else if (rbSatMonochrome->isChecked()) {
         std::clog << "ColorMonochrome Sat" << std::endl;
+        mainDisplay->setColorChoice(ColorChoice::MONO_SAT);
     } else if (rbSatColor->isChecked()) {
         std::clog << "Color Color" << std::endl;
+        mainDisplay->setColorChoice(ColorChoice::COLOR_SAT);
     }
 }
 
@@ -296,7 +323,6 @@ void MainWindow::uiSetUp()
     rbMonochrome = new QRadioButton("Gray Level", this);
     rbSatMonochrome = new QRadioButton("Gray Level, Red Saturated", this);
     rbSatColor = new QRadioButton("Color : Thermal", this);
-    rbMonochrome->setChecked(true);
 
     // Labels
     labelExposure = new QLabel("0,00 ms", this);
@@ -377,4 +403,9 @@ void MainWindow::uiSetUp()
     window = new QWidget();
     window->setLayout(mainLayout);
     setCentralWidget(window);
+}
+
+void MainWindow::sendFrameReady()
+{
+    emit frameReady();
 }

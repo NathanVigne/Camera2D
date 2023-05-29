@@ -3,21 +3,23 @@
 
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include <QFileDialog>
 #include <QGraphicsView>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLayout>
 #include <QMainWindow>
-#include <QMutex>
-#include <QMutexLocker>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpacerItem>
 #include "cameramanager.h"
+#include "exportwindow.h"
 #include "gldisplay.h"
 #include "icamera.h"
 #include <iostream>
+#include <mutex>
 
 class MainWindow : public QMainWindow
 {
@@ -26,6 +28,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+signals:
+    void frameReady();
 
 public slots:
 
@@ -55,10 +60,12 @@ public slots:
 
 private:
     void uiSetUp();
+    void sendFrameReady();
 
 private:
     ICamera *cam = nullptr;
-    QMutex m_mutex;
+    bool isRunning = false;
+    std::mutex m_mutex;
     CAMERATYPE cam_type;
 
     // ----------------------------------------

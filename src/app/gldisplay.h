@@ -3,14 +3,16 @@
 
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include <QMutex>
-#include <QMutexLocker>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLWidget>
+#include "icamera.h"
 #include <iostream>
+#include <mutex>
+
+enum ColorChoice { MONO, MONO_SAT, COLOR_SAT };
 
 class GLDisplay : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -22,13 +24,17 @@ public:
     ~GLDisplay();
 
     void resetZoom();
-    void setTexture(unsigned short *buffer, QMutex *mutex);
+    void setTexture(unsigned short *buffer, std::mutex *mutex);
 
     // public getter/setter to get image widht and heiht
     int getTexHeigth() const;
     int getTexWidth() const;
     void setTexWidth(int newTexWidth);
     void setTexHeigth(int newTexHeigth);
+    void setColorChoice(ColorChoice newColorChoice);
+    void setBit_depth(int newBit_depth);
+    void setBuff_type(BUFFTYPE newBuff_type);
+    ColorChoice getColorChoice() const;
 
 protected:
     void wheelEvent(QWheelEvent *e) override;
@@ -50,6 +56,8 @@ signals:
 private:
     int texWidth = 1200;
     int texHeigth = 1000;
+    int bit_depth = 0;
+    BUFFTYPE buff_type = BUFF_END;
 
     QPointF screenToNDC(QPointF *p);
     QPointF screenToNDCObject(QPointF *p);
@@ -72,8 +80,10 @@ private:
     QPointF croix;
     int oldWidth;
     int oldHeight;
+    ColorChoice colorChoice;
+    int maxVal;
 
-    unsigned short *private_buffer;
+    void *private_buffer;
 };
 
 #endif // GLDISPLAY_H

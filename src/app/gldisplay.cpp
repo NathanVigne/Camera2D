@@ -45,9 +45,9 @@ void GLDisplay::resetZoom()
  * \param unsigned short *buffer pointer to the data from the camera
  * \param QMutex *mutex pointer to the mutex for locking buffer 
  */
-void GLDisplay::setTexture(unsigned short *buffer, QMutex *mutex)
+void GLDisplay::setTexture(unsigned short *buffer, std::mutex *mutex)
 {
-    QMutexLocker locker(mutex);
+    std::scoped_lock locker{*mutex};
     textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
     std::clog << "GlDispay : Set Texture : test Value : " << buffer[400] << std::endl;
 }
@@ -238,6 +238,9 @@ void GLDisplay::paintGL()
     program->setUniformValue("mvp_matrix", projection * translation * scale);
     program->setUniformValue("in_line", NDCObjToScreenOpenGL(&croix));
     program->setUniformValue("myTexture", 0);
+    program->setUniformValue("colorChoice", colorChoice);
+    program->setUniformValue("maxVal", maxVal);
+    std::clog << maxVal << std::endl;
 
     // Draw
     program->enableAttributeArray(PROGRAM_VERTEX_ATTRIBUTE);
@@ -352,23 +355,100 @@ void GLDisplay::initShaders()
  */
 void GLDisplay::initTexture()
 {
-    // Init the private buffer to dark gray (clear  color)
-    private_buffer = (unsigned short *) malloc(texWidth * texHeigth * sizeof(unsigned short));
-    for (int i = 0; i < texWidth; ++i) {
-        for (int j = 0; j < texHeigth; ++j) {
-            private_buffer[i * texHeigth + j] = (unsigned short) (rand() % 1023);
-        }
-    }
+    maxVal = (int) pow(2, bit_depth) - 1;
 
-    // Set-up for Thorlabs camera
+    // Texture set-up
     textures = new QOpenGLTexture(QOpenGLTexture::Target2D);
     textures->setMinificationFilter(QOpenGLTexture::Nearest);
     textures->setMagnificationFilter(QOpenGLTexture::Nearest);
-    textures->setFormat(QOpenGLTexture::R16U);
     textures->setSize(texWidth, texHeigth);
     textures->setMipLevels(10);
-    textures->allocateStorage(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16);
-    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, private_buffer);
+
+    switch (buff_type) {
+    case U8:
+        //private_buffer = (char *) malloc(texWidth * texHeigth * sizeof(char));
+        private_buffer = new char[texWidth * texHeigth];
+        textures->setFormat(QOpenGLTexture::R8U);
+        textures->allocateStorage(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8);
+        break;
+    case U16:
+        //private_buffer = (unsigned short *) malloc(texWidth * texHeigth * sizeof(unsigned short));
+        private_buffer = new unsigned short[texWidth * texHeigth];
+        textures->setFormat(QOpenGLTexture::R16U);
+        textures->allocateStorage(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16);
+        break;
+
+    case BUFF_END:
+        std::cerr << "GLDisplay Error :: No buffer type" << std::endl;
+        break;
+    };
+
+    // Initialize the private buffer to dark gray (clear color)
+    if (buff_type == U8) {
+        for (int i = 0; i < texHeigth; ++i) {
+            for (int j = 0; j < texWidth; ++j) {
+                static_cast<char *>(private_buffer)[i * texWidth + j] = 0;
+            }
+        }
+        textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8, private_buffer);
+
+    } else if (buff_type == U16) {
+        for (int i = 0; i < texHeigth; ++i) {
+            for (int j = 0; j < texWidth; ++j) {
+                static_cast<unsigned short *>(private_buffer)[i * texWidth + j] = 0;
+            }
+        }
+        textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, private_buffer);
+    }
+}
+
+/*!
+ * \brief GLDisplay::setBit_depth
+ * \param newBit_depth
+ * 
+ * Setter for bit depth
+ * 
+ */
+void GLDisplay::setBit_depth(int newBit_depth)
+{
+    bit_depth = newBit_depth;
+}
+
+/*!
+ * \brief GLDisplay::setBuff_type
+ * \param newBuff_type
+ * 
+ * Setter for Buff type
+ * 
+ */
+void GLDisplay::setBuff_type(BUFFTYPE newBuff_type)
+{
+    buff_type = newBuff_type;
+}
+
+/*!
+ * \brief GLDisplay::setColorChoice
+ * \param newColorChoice
+ * 
+ * Setter for ColorChoice property
+ * 
+ */
+void GLDisplay::setColorChoice(ColorChoice newColorChoice)
+{
+    colorChoice = newColorChoice;
+    update();
+}
+
+/*!
+ * \brief GLDisplay::getColorChoice
+ * \return 
+ * 
+ * Getter for colorChoice
+ * 
+ */
+ColorChoice GLDisplay::getColorChoice() const
+{
+    return colorChoice;
 }
 
 /*!

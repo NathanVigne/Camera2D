@@ -1,9 +1,8 @@
 #ifndef ICAMERA_H
 #define ICAMERA_H
 
-#include <QMutex>
-#include <QMutexLocker>
-#include <QObject>
+#include <functional>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -15,10 +14,11 @@ struct CamNamesIDs
 
 enum TRIGGER { CONTINUOUS, SINGLE_SHOT, TRIGGER_END };
 
+enum BUFFTYPE { U8, U16, BUFF_END };
+
 /// \brief Camera interface
-class ICamera : public QObject
+class ICamera
 {
-    Q_OBJECT
 public:
     virtual ~ICamera() {}
 
@@ -36,20 +36,27 @@ public:
     virtual CamNamesIDs SearchCam() = 0;
     virtual void Initialize() = 0;
 
+    // Setter and Getter
+    void setMutex(std::mutex *mut) { m_mutex = mut; };
+    std::mutex *getMutex() { return m_mutex; };
     double getMinGain() { return min_gain; };
     double getMaxGain() { return max_gain; };
     long long getMinExposure() { return min_exposure; };
     long long getMaxExposure() { return max_exposure; };
     int getSensorHeigth() { return sensorHeight_px; };
     int getSensorWidth() { return sensorWidth_px; };
+    int getBitDepth() { return bit_depth; };
+    BUFFTYPE getBuffType() { return buff_type; };
 
-    QMutex *m_mutex;
+    virtual void setFrameReadyCallback(std::function<void()> frameReadyCallback) = 0;
+
+    // TO DO : check usefullnes ?
     unsigned short *temp_image_buffer = nullptr;
 
-signals:
-    void frameReady();
-
 protected:
+    // callBack = emit signal when frame ready
+    std::function<void()> m_frameReadyCallback;
+
     bool isConnected = false;
     void *handle = nullptr;
 
@@ -62,6 +69,10 @@ protected:
     int sensorWidth_px = 0;
     double pixelWidth = 0;
     double pixelHeight = 0;
+    int bit_depth = 0;
+    BUFFTYPE buff_type = BUFF_END;
+    std::mutex *m_mutex;
+
     unsigned char *temp_metadata_buffer = nullptr;
 };
 

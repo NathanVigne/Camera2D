@@ -4,6 +4,7 @@ set(PROJECT_SOURCES
     connectwindow.cpp
     cameramanager.cpp
     gldisplay.cpp
+    exportwindow.cpp
 )
 
 set(PROJECT_HEADERS
@@ -12,6 +13,7 @@ set(PROJECT_HEADERS
     icamera.h
     cameramanager.h
     gldisplay.h
+    exportwindow.h
 )
 
 set(POJECT_RESSOURCES

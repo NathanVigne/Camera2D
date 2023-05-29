@@ -26,6 +26,9 @@ public:
     CamNamesIDs SearchCam() override;
     void Initialize() override;
 
+    // callback
+    void setFrameReadyCallback(std::function<void()> frameReadyCallback) override;
+
 private:
     // Specific Thorlabs mehtods and properties
     bool isDLLOpen = false;
@@ -40,6 +43,8 @@ private:
     void LoadGain();
     void LoadExposure();
     void LoadSensorInfo();
+    void LoadBitDepth();
+    void LoadBufferType();
     void LoadInfo();
 
     void SetTrigger(TRIGGER trig);

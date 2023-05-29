@@ -336,6 +336,19 @@ void ThorCam::Initialize()
     temp_metadata_buffer = (unsigned char *) malloc(sizeof(unsigned char) * 7 * 8);
 }
 
+/*!
+ * \brief ThorCam::setFrameReadyCallback
+ * \param frameReadyCallback
+ * 
+ * Setting the callback for when frame is ready.
+ * the callback function must be set in mainWindow or mainDisplay
+ * 
+ */
+void ThorCam::setFrameReadyCallback(std::function<void()> frameReadyCallback)
+{
+    m_frameReadyCallback = frameReadyCallback;
+}
+
 /*! \fn int ThorCam::InitializedDLL()
     
     ThorCam specific implementation to open all ressources (DLL and SDK).
@@ -473,6 +486,33 @@ void ThorCam::LoadSensorInfo()
     }
 }
 
+/*!
+ * \brief ThorCam::LoadBitDepth
+ * 
+ * Get info about bitDepth of the buffer
+ * 
+ */
+void ThorCam::LoadBitDepth()
+{
+    int result = tl_camera_get_bit_depth(handle, &bit_depth);
+    if (result != 0) {
+        std::cerr << "Thorlab :: Failed to load bit depth : " << tl_camera_get_last_error()
+                  << std::endl;
+        return;
+    }
+}
+
+/*!
+ * \brief ThorCam::LoadBufferType
+ * 
+ * Get Info about buffer type
+ * 
+ */
+void ThorCam::LoadBufferType()
+{
+    buff_type = U16;
+}
+
 /*! \fn void ThorCam::LoadInfo()
     
     ThorCam specific implementation to load all relevant camera infos.
@@ -484,6 +524,8 @@ void ThorCam::LoadInfo()
     LoadGain();
     LoadExposure();
     LoadSensorInfo();
+    LoadBitDepth();
+    LoadBufferType();
 }
 
 /*! \fn void ThorCam::SetTrigger(TRIGGER trig) {}
@@ -614,10 +656,12 @@ void ThorCam::FrameAvailableCallback(void *sender,
 {
     std::clog << "Thorlab :: FrameAvailabelCallback called !" << std::endl;
     ThorCam *ctx = (ThorCam *) context;
-    QMutexLocker locker(ctx->m_mutex);
+    std::scoped_lock lock{*(ctx->m_mutex)};
+
     memcpy(ctx->temp_image_buffer,
            image_buffer,
            (sizeof(unsigned short) * ctx->sensorHeight_px * ctx->sensorWidth_px));
     ctx->isFirstFrameFinished = true;
-    emit ctx->frameReady();
+    ctx->m_frameReadyCallback();
+    //emit ctx->frameReady();
 }
