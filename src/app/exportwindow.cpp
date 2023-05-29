@@ -153,6 +153,18 @@ QColor exportWindow::colorMap(float x, float norm_step)
 }
 
 /*!
+ * \brief exportWindow::checkCheckBox
+ * \return bool
+ * 
+ * retrun true is one or more boxes are check otherwise return false
+ * 
+ */
+bool exportWindow::checkCheckBox()
+{
+    return cbTXT->isChecked() | cbX->isChecked() | cbY->isChecked() | cbPNG->isChecked();
+}
+
+/*!
  * \brief exportWindow::saveFiles
  * 
  * Private slot called whand Ok button pressed
@@ -163,6 +175,16 @@ QColor exportWindow::colorMap(float x, float norm_step)
 void exportWindow::saveFiles()
 {
     std::scoped_lock lock{*m_mutex};
+    QMessageBox msgBox;
+    msgBox.setWindowIcon(QIcon(":/icon/cam_ico.png"));
+
+    if (!checkCheckBox()) {
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setText("No file selected");
+        msgBox.setWindowTitle("Error");
+        msgBox.exec();
+        return;
+    }
 
     // Open savefile window
     QString directory = QFileDialog::getSaveFileName(this, tr("Save Files"), "", tr(""));
@@ -170,7 +192,10 @@ void exportWindow::saveFiles()
         QDir dir(directory);
         if (!dir.exists()) {
             if (!dir.mkpath(directory)) {
-                QMessageBox::critical(nullptr, "Error", "Failed to create the directory.");
+                msgBox.setIcon(QMessageBox::Critical);
+                msgBox.setText("Failed to create the directory.");
+                msgBox.setWindowTitle("Error");
+                msgBox.exec();
                 return;
             }
         }
@@ -195,7 +220,10 @@ void exportWindow::saveFiles()
                 }
                 file.close();
             } else {
-                QMessageBox::critical(nullptr, "Error", "Failed to save all files.");
+                msgBox.setIcon(QMessageBox::Critical);
+                msgBox.setText("Failed to save all files.");
+                msgBox.setWindowTitle("Error");
+                msgBox.exec();
                 return;
             }
         }
@@ -244,15 +272,24 @@ void exportWindow::saveFiles()
             }
             if (image.save(filePath, "PNG")) {
             } else {
-                QMessageBox::critical(nullptr, "Error", "Failed to save all files.");
+                msgBox.setIcon(QMessageBox::Critical);
+                msgBox.setText("Failed to save all files.");
+                msgBox.setWindowTitle("Error");
+                msgBox.exec();
                 return;
             }
         }
 
-        QMessageBox::information(nullptr, "Success", "All File saved successfully.");
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setText("All File saved successfully.");
+        msgBox.setWindowTitle("Success");
+        msgBox.exec();
 
     } else {
-        QMessageBox::information(nullptr, "Information", "No name entered.");
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setText("No name entered.");
+        msgBox.setWindowTitle("Error");
+        msgBox.exec();
     }
 
     // close window

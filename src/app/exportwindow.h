@@ -34,6 +34,7 @@ private:
     float setBlue(float x, float norm_step);
     float setGreen(float x, float norm_step);
     QColor colorMap(float x, float norm_step);
+    bool checkCheckBox();
 
 private slots:
     void saveFiles();

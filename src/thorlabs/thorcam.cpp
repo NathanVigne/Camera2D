@@ -333,6 +333,11 @@ void ThorCam::Initialize()
     // initialize buffer for the Frame callBack
     temp_image_buffer = (unsigned short *) malloc(sizeof(unsigned short) * sensorWidth_px
                                                   * sensorHeight_px);
+    for (int i = 0; i < sensorHeight_px; ++i) {
+        for (int j = 0; j < sensorWidth_px; ++j) {
+            temp_image_buffer[i * sensorWidth_px + j] = 0;
+        }
+    }
     temp_metadata_buffer = (unsigned char *) malloc(sizeof(unsigned char) * 7 * 8);
 }
 
