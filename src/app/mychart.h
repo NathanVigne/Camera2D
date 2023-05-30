@@ -1,31 +1,40 @@
 #ifndef MYCHART_H
 #define MYCHART_H
 
-#include <QChart>
-#include <QChartView>
+#include <QGridLayout>
 #include <QWidget>
+#include <QtCharts/QChart>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QValueAxis>
 
-typedef QPair<QPointF, QString> Data;
-typedef QList<Data> DataList;
-typedef QList<DataList> DataTable;
-
-class myChart : public QWidget
+class MyChart : public QWidget
 {
     Q_OBJECT
 public:
-    explicit myChart(QWidget *parent = 0);
-    ~myChart();
+    explicit MyChart(QWidget *parent = nullptr, QColor pen_Color = Qt::black, int bitepth = 8);
+    ~MyChart();
+
+    void addDataPoint(std::vector<int> &datas, int xoffset);
+    void addFitPoint(std::vector<int> &datas, int xoffset);
+
+    void setMaxY(int newMaxY);
 
 private:
-    DataTable generateRandomData(int listCount, int valueMax, int valueCount) const;
-    QChart *createLineChart() const;
+    void setUpChart();
 
 private:
-    QChartView *m_chartsView;
-    DataTable m_dataTable;
-    int m_listCount;
-    int m_valueMax;
-    int m_valueCount;
+    // Creating the chart Object !!
+    QChartView *graphique;      // un widget pour afficher un graphe
+    QChart *graphe;             // la représentation d'un graphe
+    QScatterSeries *courbeData; // les données
+    QLineSeries *courbeFit;     // les données
+    QValueAxis *axisX;          // Axis
+    QValueAxis *axisY;
+
+    QColor penColor = Qt::black;
+    int maxY;
 };
 
 #endif // MYCHART_H

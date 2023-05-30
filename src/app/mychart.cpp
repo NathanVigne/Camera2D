@@ -1,88 +1,165 @@
 #include "mychart.h"
-#include <QVBoxLayout>
-#include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
-#include <QtCore/QRandomGenerator>
+#include "qgraphicslayout.h"
 
-myChart::myChart(QWidget *parent)
-    : QWidget(parent)
-    , m_listCount(3)
-    , m_valueMax(10)
-    , m_valueCount(7)
-
+/*!
+ * \brief MyChart::MyChart
+ * \param QWidget *parent
+ * \param QColor pen_Color
+ * \param int bitDepth
+ * 
+ * constructor for custom graph
+ * Need to take the color for the data/fit plots
+ * and the bitDepth to compute the max value and set-up 
+ * the Y-axis
+ * 
+ * 
+ */
+MyChart::MyChart(QWidget *parent, QColor pen_Color, int bitDepth)
+    : QWidget{parent}
 {
-    m_dataTable = generateRandomData(m_listCount, m_valueMax, m_valueCount);
-    //create charts
-    m_chartsView = new QChartView(createLineChart());
-
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    m_chartsView->setRenderHint(QPainter::Antialiasing, true);
-    m_chartsView->chart()->legend()->hide();
-    m_chartsView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    mainLayout->addWidget(m_chartsView);
-    mainLayout->setContentsMargins(QMargins(0, 0, 0, 0));
+    maxY = int(pow(2, bitDepth)) - 1;
+    penColor = pen_Color;
+    setUpChart();
 }
 
-myChart::~myChart()
-{
-    delete m_chartsView;
-}
+/*!
+ * \brief MyChart::~MyChart
+ * 
+ * Destructor
+ * 
+ */
+MyChart::~MyChart() {}
 
-DataTable myChart::generateRandomData(int listCount, int valueMax, int valueCount) const
+/*!
+ * \brief MyChart::addDataPoint
+ * \param std::vector<int> &datas
+ * \param int xoffset
+ * 
+ * Add data to the courbeData scatters serie
+ * 
+ * update the x-axis by taking into account the xoffset
+ * 
+ */
+void MyChart::addDataPoint(std::vector<int> &datas, int xoffset)
 {
-    DataTable dataTable;
-
-    // generate random data
-    for (int i(0); i < listCount; i++) {
-        DataList dataList;
-        qreal yValue(0);
-        for (int j(0); j < valueCount; j++) {
-            yValue = yValue + QRandomGenerator::global()->bounded(valueMax / (qreal) valueCount);
-            QPointF value((j + QRandomGenerator::global()->generateDouble())
-                              * ((qreal) m_valueMax / (qreal) valueCount),
-                          yValue);
-            QString label = "Slice " + QString::number(i) + ":" + QString::number(j);
-            dataList << Data(value, label);
-        }
-        dataTable << dataList;
+    courbeData->clear();
+    for (int i = 0; i < datas.size(); ++i) {
+        courbeData->append(QPointF(i - xoffset, datas[i]));
     }
-
-    return dataTable;
+    axisX->setRange(-xoffset, datas.size() - 1 - xoffset);
 }
 
-QChart *myChart::createLineChart() const
+/*!
+ * \brief MyChart::addFitPoint
+ * \param std::vector<int> &datas
+ * \param xoffset
+ * 
+ * Add data to the courbefir lineserie
+ * 
+ */
+void MyChart::addFitPoint(std::vector<int> &datas, int xoffset)
 {
-    //![1]
-    QChart *chart = new QChart();
-    chart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    chart->setMargins(QMargins(0, 0, 0, 0));
-    //chart->setTitle("Line chart");
-    //![1]
-
-    //![2]
-    QString name("Series ");
-    int nameIndex = 0;
-    for (const DataList &list : m_dataTable) {
-        QLineSeries *series = new QLineSeries(chart);
-        for (const Data &data : list)
-            series->append(data.first);
-        series->setName(name + QString::number(nameIndex));
-        nameIndex++;
-        chart->addSeries(series);
+    courbeFit->clear();
+    for (int i = 0; i < datas.size(); ++i) {
+        courbeFit->append(QPointF(i - xoffset, datas[i]));
     }
-    //![2]
+}
 
-    //![3]
-    chart->createDefaultAxes();
-    chart->axes(Qt::Horizontal).first()->setRange(0, m_valueMax);
-    chart->axes(Qt::Vertical).first()->setRange(0, m_valueCount);
-    //![3]
-    //![4]
-    // Add space to label to add space between labels and axis
-    QValueAxis *axisY = qobject_cast<QValueAxis *>(chart->axes(Qt::Vertical).first());
-    Q_ASSERT(axisY);
-    axisY->setLabelFormat("%.1f  ");
-    //![4]
+/*!
+ * \brief MyChart::setUpChart
+ * 
+ * Set up the chart Widget with the wanted style !
+ * 
+ * create two series for fit and data
+ * 
+ */
+void MyChart::setUpChart()
+{
+    courbeData = new QScatterSeries();
+    courbeFit = new QLineSeries();
 
-    return chart;
+    // Courbe style for Data
+    courbeData->setColor(penColor);
+    courbeData->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    courbeData->setMarkerSize(3);
+    courbeData->setUseOpenGL(true);
+
+    // Courbe style for Fit
+    QPen pen(penColor);
+    pen.setWidth(1);
+    pen.setStyle(Qt::DashLine);
+    courbeFit->setPen(pen);
+
+    // Creat new chart with two series (Data & Fit)
+    graphe = new QChart();
+    graphe->addSeries(courbeData);
+    graphe->addSeries(courbeFit);
+
+    // No legend
+    graphe->legend()->hide();
+
+    // Axes Styles !
+    QPen minorGrid = QPen(QColor(200, 200, 200));
+    minorGrid.setStyle(Qt::DashLine);
+    QPen majorGrid = QPen(QColor(175, 175, 175));
+    axisX = new QValueAxis();
+    axisX->setRange(0, 1);
+    axisX->setLabelFormat("%i");
+    axisX->setTickCount(5);
+    axisX->setGridLineVisible(true);
+    axisX->setMinorTickCount(1);
+    axisX->setMinorGridLineVisible(true);
+    axisX->setGridLinePen(majorGrid);
+    axisX->setMinorGridLinePen(minorGrid);
+    graphe->addAxis(axisX, Qt::AlignBottom);
+    courbeFit->attachAxis(axisX);
+    courbeData->attachAxis(axisX);
+
+    axisY = new QValueAxis();
+    axisY->setRange(0, maxY);
+    axisY->setLabelFormat("%i");
+    axisY->setTickCount(5);
+    axisY->setGridLineVisible(true);
+    axisY->setMinorTickCount(1);
+    axisY->setMinorGridLineVisible(true);
+    axisY->setGridLinePen(majorGrid);
+    axisY->setMinorGridLinePen(minorGrid);
+    graphe->addAxis(axisY, Qt::AlignLeft);
+    courbeData->attachAxis(axisY);
+    courbeFit->attachAxis(axisY);
+
+    // Remove padding
+    graphe->setMargins(QMargins(0, 0, 0, 0));
+
+    // Remove roundness
+    //graphe->setBackgroundRoundness(0);
+
+    // Remove margin
+    graphe->layout()->setContentsMargins(0, 0, 0, 0);
+
+    // ChartView Widget (antialiasing renderer)
+    graphique = new QChartView(graphe);
+    graphique->setRenderHint(QPainter::Antialiasing);
+
+    // Add to a layout otherwise it is hidden
+    QGridLayout *layout = new QGridLayout(this);
+    layout->addWidget(graphique);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    //All margins are remove !
+    // Spacing control is now done with the layout in mainwindow !
+}
+
+/*!
+ * \brief MyChart::setMaxY
+ * \param int newMaxY
+ * 
+ * update the maxY value
+ * 
+ */
+void MyChart::setMaxY(int newMaxY)
+{
+    maxY = newMaxY;
+    axisY->setRange(0, maxY);
 }

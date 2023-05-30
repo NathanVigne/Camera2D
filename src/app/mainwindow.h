@@ -128,10 +128,8 @@ private:
     // ----------------------------------------
     // secondary display
     // ----------------------------------------
-    //QGraphicsView *xcutDisplay;
-    myChart *xcutDisplay;
-    //QGraphicsView *ycutDisplay;
-    myChart *ycutDisplay;
+    MyChart *xcutDisplay;
+    MyChart *ycutDisplay;
 
     // Group Boxes
     QGroupBox *gbSecondaryDisplay;

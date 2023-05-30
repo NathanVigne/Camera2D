@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setWindowIcon(QIcon(":/icon/cam_ico.png"));
     uiSetUp();
+    resize(1200, 600);
 
     // Connect Slot to cam !
     // TO DO caonnection with Color and chack boxes !
@@ -302,14 +303,23 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     bStart = new QPushButton(this);
     bStart->setText("Start");
+    bStart->setFixedHeight(30);
+
     bStop = new QPushButton(this);
     bStop->setText("Stop");
+    bStop->setFixedHeight(30);
+
     bSingleShot = new QPushButton(this);
     bSingleShot->setText("Single shot");
+    bSingleShot->setFixedHeight(30);
+
     bExport = new QPushButton(this);
     bExport->setText("Export");
+    bExport->setFixedHeight(30);
+
     bQuit = new QPushButton(this);
     bQuit->setText("Quit");
+    bQuit->setFixedHeight(30);
 
     sButtons = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
@@ -367,8 +377,8 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     //xcutDisplay = new QGraphicsView(this);
     //ycutDisplay = new QGraphicsView(this);
-    xcutDisplay = new myChart(this);
-    ycutDisplay = new myChart(this);
+    xcutDisplay = new MyChart(this, QColor(0, 0, 255));
+    ycutDisplay = new MyChart(this, QColor(255, 0, 0));
 
     // Group Boxes
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
@@ -380,7 +390,15 @@ void MainWindow::uiSetUp()
     bResetZoom->setText("Reset Zoom");
 
     // Label
-    labelInfo = new QLabel("Info");
+    labelInfo = new QLabel("Fit Information");
+    QFont font = labelInfo->font();
+    font.setPointSize(12);
+    font.setBold(true);
+    labelInfo->setFont(font);
+    labelInfo->setMinimumHeight(80);
+    labelInfo->setAlignment(Qt::AlignCenter);
+    labelInfo->clear();
+    labelInfo->setText("\tX\t\t/\t\tY\nWaist : \txxx µm\t xxx µm\nOther : \txxx µm\t xxx µm");
 
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
@@ -391,7 +409,7 @@ void MainWindow::uiSetUp()
     lSecondaryDisplay->addWidget(xcutDisplay);
     lSecondaryDisplay->addWidget(ycutDisplay);
     lSecondaryDisplay->addWidget(labelInfo);
-    //lSecondaryDisplay->setContentsMargins(0, 0, 0, 0);
+    lSecondaryDisplay->setContentsMargins(5, 0, 5, 0);
 
     gbSecondaryDisplay->setLayout(lSecondaryDisplay);
 
@@ -401,15 +419,21 @@ void MainWindow::uiSetUp()
     mainDisplay = new GLDisplay(this);
 
     // ----------------------------------------
+    // Right Widget set-up
+    // ----------------------------------------
+    QVBoxLayout *rightLayout = new QVBoxLayout();
+    rightLayout->addWidget(gbSecondaryDisplay);
+    rightLayout->addLayout(lButtons);
+
+    // ----------------------------------------
     // Central Widget set-up
     // ----------------------------------------
     mainLayout = new QGridLayout();
-    mainLayout->addLayout(lControls, 1, 0);
-    mainLayout->addLayout(lButtons, 1, 1);
     mainLayout->addWidget(mainDisplay, 0, 0);
-    mainLayout->addWidget(gbSecondaryDisplay, 0, 1);
-    mainLayout->setColumnStretch(0, 3);
-    mainLayout->setColumnStretch(1, 2);
+    mainLayout->addLayout(lControls, 1, 0);
+    mainLayout->addLayout(rightLayout, 0, 1, 2, 1);
+    mainLayout->setColumnStretch(0, 5);
+    mainLayout->setColumnStretch(1, 4);
     mainLayout->setColumnMinimumWidth(0, 600);
     mainLayout->setRowMinimumHeight(0, 400);
     mainLayout->setRowStretch(0, 1);
