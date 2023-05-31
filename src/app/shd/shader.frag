@@ -10,29 +10,29 @@ float i;
 // Need to adjust the transition to white (threshold and speed)
 // take the color transition to be 2-5 increment of the normalized bit depth ?
 float colormap_red(float x) {
-        return 4.0 * x - 2;
+        return 5.0 * x - 3.0;
 }
 
 float colormap_green(float x, float normStep) {
-    if (x < 0.5) {
-        return 4.0 * x - 1.0;
+    if (x < 0.6) {
+        return 5.0 * x - 1.0;
     } else {
         if(x<(1-3*normStep)){
-            return -4.0 * x + 4.0;
+            return -5.0 * x + 5.0;
         }else{
-            return 1/(3*normStep) * x - 1;
+            return 1/(3*normStep) * x + (1-1/(3*normStep));
         }
     }
 }
 
 float colormap_blue(float x, float normStep) {
-    if (x < 0.375) {
-       return 4.0 * x + 0.0;
+    if (x < 0.3) {
+       return 5.0 * x + 0.0;
     } else {
         if(x<(1-3*normStep)){
-            return -4.0 * x + 3.0;
+            return -5.0 * x + 3.0;
         }else{
-            return 1/(3*normStep) * x - 1;
+            return 1/(3*normStep) * x + (1-1/(3*normStep));
         }
     }
 }

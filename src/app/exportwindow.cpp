@@ -77,7 +77,7 @@ void exportWindow::setUpUI()
  */
 float exportWindow::setRed(float x, float norm_step)
 {
-    return 4.0 * x - 2;
+    return 5.0 * x - 3.0;
 }
 
 /*!
@@ -88,13 +88,13 @@ float exportWindow::setRed(float x, float norm_step)
  */
 float exportWindow::setBlue(float x, float norm_step)
 {
-    if (x < 0.375) {
-        return 4.0 * x + 0.0;
+    if (x < 0.3) {
+        return 5.0 * x + 0.0;
     } else {
         if (x < (1 - 3 * norm_step)) {
-            return -4.0 * x + 3.0;
+            return -5.0 * x + 3.0;
         } else {
-            return 1 / (3 * norm_step) * x - 1;
+            return 1 / (3 * norm_step) * x + (1 - 1 / (3 * norm_step));
         }
     }
 }
@@ -108,12 +108,12 @@ float exportWindow::setBlue(float x, float norm_step)
 float exportWindow::setGreen(float x, float norm_step)
 {
     if (x < 0.5) {
-        return 4.0 * x - 1.0;
+        return 5.0 * x - 1.0;
     } else {
         if (x < (1 - 3 * norm_step)) {
-            return -4.0 * x + 4.0;
+            return -5.0 * x + 5.0;
         } else {
-            return 1 / (3 * norm_step) * x - 1;
+            return 1 / (3 * norm_step) * x + (1 - 1 / (3 * norm_step));
         }
     }
 }
