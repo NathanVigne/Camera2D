@@ -100,7 +100,7 @@ QColor exportWindow::colorMap(float x)
 
     if (x <= 3 * step) {
         r = (90.0 / 255.0) / step * x - (180.0 / 255.0);
-        g = -(6.0 / 255.0) / step * x - (208.0 / 255.0);
+        g = -(6.0 / 255.0) / step * x + (208.0 / 255.0);
         b = -(221.0 / 255.0) / step * x + (697.0 / 255.0);
         col.setRgbF(r, g, b);
         return col;
