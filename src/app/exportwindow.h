@@ -30,10 +30,7 @@ public:
 
 private:
     void setUpUI();
-    float setRed(float x, float norm_step);
-    float setBlue(float x, float norm_step);
-    float setGreen(float x, float norm_step);
-    QColor colorMap(float x, float norm_step);
+    QColor colorMap(float x);
     bool checkCheckBox();
 
 private slots:

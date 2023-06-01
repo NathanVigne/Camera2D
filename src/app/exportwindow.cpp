@@ -70,86 +70,79 @@ void exportWindow::setUpUI()
 }
 
 /*!
- * \brief exportWindow::setRed
- * \param float x (normalize value of the camera)
- * \param float norm_step (normalize camera intensity step)
- * \return float red value !
- */
-float exportWindow::setRed(float x, float norm_step)
-{
-    return 5.0 * x - 3.0;
-}
-
-/*!
- * \brief exportWindow::setBlue
- * \param float x (normalize value of the camera)
- * \param float norm_step (normalize camera intensity step)
- * \return float blue value !
- */
-float exportWindow::setBlue(float x, float norm_step)
-{
-    if (x < 0.3) {
-        return 5.0 * x + 0.0;
-    } else {
-        if (x < (1 - 3 * norm_step)) {
-            return -5.0 * x + 3.0;
-        } else {
-            return 1 / (3 * norm_step) * x + (1 - 1 / (3 * norm_step));
-        }
-    }
-}
-
-/*!
- * \brief exportWindow::setGreen
- * \param float x (normalize value of the camera)
- * \param float norm_step (normalize camera intensity step)
- * \return float green value !
- */
-float exportWindow::setGreen(float x, float norm_step)
-{
-    if (x < 0.5) {
-        return 5.0 * x - 1.0;
-    } else {
-        if (x < (1 - 3 * norm_step)) {
-            return -5.0 * x + 5.0;
-        } else {
-            return 1 / (3 * norm_step) * x + (1 - 1 / (3 * norm_step));
-        }
-    }
-}
-
-/*!
  * \brief exportWindow::colorMap
  * \param float x (normalize value of the camera)
- * \param float norm_step (normalize camera intensity step)
  * \return Qcolor reprensting the heat colormap!
  */
-QColor exportWindow::colorMap(float x, float norm_step)
+QColor exportWindow::colorMap(float x)
 {
-    float r = setRed(x, norm_step);
-    if (r > 1.0) {
-        r = 1.0;
-    }
-    if (r < 0.0) {
-        r = 0.0;
-    }
-    float g = setGreen(x, norm_step);
-    if (g > 1.0) {
-        g = 1.0;
-    }
-    if (g < 0.0) {
-        g = 0.0;
-    }
-    float b = setBlue(x, norm_step);
-    if (b > 1.0) {
-        b = 1.0;
-    }
-    if (b < 0.0) {
-        b = 0.0;
-    }
+    float step = 0.125;
+    float r = 0.0;
+    float g = 0.0;
+    float b = 0.0;
     QColor col;
-    col.setRgbF(r, g, b);
-    return col;
+
+    if (x <= step) {
+        r = (47.0 / 255.0) / step * x;
+        g = (50.0 / 255.0) / step * x;
+        b = (140.0 / 255.0) / step * x;
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 2 * step) {
+        r = -(47.0 / 255.0) / step * x + (94.0 / 255.0);
+        g = (146.0 / 255.0) / step * x - (96.0 / 255.0);
+        b = (115.0 / 255.0) / step * x + (25.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 3 * step) {
+        r = (90.0 / 255.0) / step * x - (180.0 / 255.0);
+        g = -(6.0 / 255.0) / step * x - (208.0 / 255.0);
+        b = -(221.0 / 255.0) / step * x + (697.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 4 * step) {
+        r = (165.0 / 255.0) / step * x - (405.0 / 255.0);
+        g = (35.0 / 255.0) / step * x + (85.0 / 255.0);
+        b = -(34.0 / 255.0) / step * x + (136.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 5 * step) {
+        r = -(15.0 / 255.0) / step * x + (315.0 / 255.0);
+        g = -(85.0 / 255.0) / step * x + (565.0 / 255.0);
+        b = (11.0 / 255.0) / step * x - (44.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 6 * step) {
+        r = +(15.0 / 255.0) / step * x + (165.0 / 255.0);
+        g = -(140.0 / 255.0) / step * x + (840.0 / 255.0);
+        b = -(11.0 / 255.0) / step * x + (66.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
+
+    if (x <= 7 * step) {
+        r = -(19.0 / 255.0) / step * x + (369.0 / 255.0);
+        g = (19.0 / 255.0) / step * x - (114.0 / 255.0);
+        b = (142.0 / 255.0) / step * x - (852.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    } else {
+        r = (19.0 / 255.0) / step * x + (103.0 / 255.0);
+        g = (236.0 / 255.0) / step * x - (1633.0 / 255.0);
+        b = (113.0 / 255.0) / step * x - (649.0 / 255.0);
+        col.setRgbF(r, g, b);
+        return col;
+    }
 }
 
 /*!
@@ -264,7 +257,7 @@ void exportWindow::saveFiles()
                         }
                         break;
                     case COLOR_SAT:
-                        col = colorMap(x, norm_step);
+                        col = colorMap(x);
                         break;
                     };
                     image.setPixelColor(j, i, col);
