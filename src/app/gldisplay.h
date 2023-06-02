@@ -35,6 +35,7 @@ public:
     void setBit_depth(int newBit_depth);
     void setBuff_type(BUFFTYPE newBuff_type);
     ColorChoice getColorChoice() const;
+    QPoint getCroix() const;
 
 protected:
     void wheelEvent(QWheelEvent *e) override;

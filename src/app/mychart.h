@@ -21,6 +21,9 @@ public:
 
     void setMaxY(int newMaxY);
 
+    std::vector<int> temp_X;
+    std::vector<int> temp_Y;
+
 private:
     void setUpChart();
 

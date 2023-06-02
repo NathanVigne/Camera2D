@@ -32,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(sliderExposure, &QSlider::valueChanged, this, &MainWindow::slot_Exposure);
 
     //Color connection
-    connect(rbMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
-    connect(rbSatMonochrome, &QRadioButton::toggled, this, &MainWindow::slot_Color);
-    connect(rbSatColor, &QRadioButton::toggled, this, &MainWindow::slot_Color);
+    connect(rbMonochrome, &QRadioButton::clicked, this, &MainWindow::slot_Color);
+    connect(rbSatMonochrome, &QRadioButton::clicked, this, &MainWindow::slot_Color);
+    connect(rbSatColor, &QRadioButton::clicked, this, &MainWindow::slot_Color);
 
     connect(this, &MainWindow::frameReady, this, &MainWindow::callBackDraw, Qt::QueuedConnection);
     connect(this,
@@ -55,18 +55,42 @@ MainWindow::MainWindow(QWidget *parent)
  * MainWindow destructor, nothing to do ! (Sure ??)
  * 
  */
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow()
+{
+    std::clog << "Destroy MainWindow " << std::endl;
+}
 
 /*!
  * \brief MainWindow::callBackDraw
  * 
  * CallBack function called to draw on the GLDisplay !
  * 
+ * TO DO : Move all memory managment to manager class ?
+ * 
  */
 void MainWindow::callBackDraw()
 {
     mainDisplay->setTexture(cam->temp_image_buffer, &m_mutex);
     mainDisplay->update();
+
+    // Get 1D cuts TO Test ???
+    // Move to a memory manager ?
+    QPoint posCroix = mainDisplay->getCroix();
+    int w = mainDisplay->getTexWidth();
+    int h = mainDisplay->getTexHeigth();
+
+    std::scoped_lock locker{m_mutex};
+    for (int i = 0; i < std::max(w, h); ++i) {
+        if (i < w) {
+            xcutDisplay->temp_X.push_back((int) cam->temp_image_buffer[posCroix.x() * w + i]);
+        }
+        if (i < h) {
+            ycutDisplay->temp_Y.push_back((int) cam->temp_image_buffer[i * w + posCroix.y()]);
+        }
+    }
+    // Need to compute the Fit ??
+    xcutDisplay->addDataPoint(xcutDisplay->temp_X, 0);
+    ycutDisplay->addDataPoint(ycutDisplay->temp_Y, 0);
 }
 
 /*!
@@ -140,6 +164,7 @@ void MainWindow::slot_Start()
 {
     std::clog << "Start Clicked" << std::endl;
     cam->Start();
+    bStart->setDisabled(true);
     isRunning = true;
 }
 
@@ -153,6 +178,7 @@ void MainWindow::slot_Stop()
 {
     std::clog << "Stop Clicked" << std::endl;
     cam->Stop();
+    bStart->setDisabled(false);
     isRunning = false;
 }
 
@@ -167,6 +193,7 @@ void MainWindow::slot_SingleShot()
 {
     std::clog << "Single Shot Clicked" << std::endl;
     cam->SingleShot();
+    bStart->setDisabled(false);
     isRunning = false;
 }
 
@@ -174,14 +201,13 @@ void MainWindow::slot_SingleShot()
  * \brief MainWindow::slot_Export
  * 
  * Public slot called when the Export button is push.
- * 
- * TO DO : implement to the export functionalllty
- * 
+ *
  */
 void MainWindow::slot_Export()
 {
     std::clog << "Export Clicked" << std::endl;
     exportWindow *exW = new exportWindow;
+    exW->setButtonExport(bExport);
     exW->setIsRunning(isRunning);
     exW->setColChoice(mainDisplay->getColorChoice());
     exW->setCam(cam);
@@ -196,8 +222,6 @@ void MainWindow::slot_Export()
  * Public slot called when the Quit button is push. Close the window.
  * If it is the last window then the application will quit and all cleanup
  * should be done by all classes.
- * 
- * TO DO : Think of a way to always close the application and force cleanup ?
  * 
  */
 void MainWindow::slot_Quit()
@@ -268,12 +292,6 @@ void MainWindow::slot_Exposure(int newExposure)
  * \param bool check
  * 
  * Public slot called when a radio button is toggled
- * 
- * TO DO : implement the color change in main Display
- * 
- * TO DO : function called twice (once for the turn off of the previous
- * radio button then for the turn on of the other) think of a way for 
- * having a single call !
  * 
  */
 void MainWindow::slot_Color(bool check)

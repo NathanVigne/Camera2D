@@ -28,6 +28,8 @@ public:
 
     void setIsRunning(bool newIsRunning);
 
+    void setButtonExport(QPushButton *newButtonExport);
+
 private:
     void setUpUI();
     QColor colorMap(float x);
@@ -56,6 +58,7 @@ private:
 
     // PushButton
     QPushButton *buttonOK;
+    QPushButton *buttonExport;
 
     QWidget *window;
 };

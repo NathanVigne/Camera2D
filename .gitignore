@@ -74,3 +74,4 @@ CMakeLists.txt.user*
 
 # Include dlls if they're in the CommonReferences directory
 !src/thorlabs/dlls/*/*.dll
+!src/mightex/dlls/*/*.dll

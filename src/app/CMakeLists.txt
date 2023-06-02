@@ -35,7 +35,7 @@ add_custom_command(TARGET Camera2D POST_BUILD
     # Adds a post-build event to MyTest  which executes "cmake - E copy_if_different..."
     #                                               this is in-file                                                                    this is out-directory
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/thorlabs/dlls/Native_64_lib/" $<TARGET_FILE_DIR:Camera2D>
-
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/mightex/dlls/x64/" $<TARGET_FILE_DIR:Camera2D>
 )
 
 
@@ -45,8 +45,8 @@ target_link_libraries(Camera2D PRIVATE
     Qt6::OpenGLWidgets
     Qt6::OpenGL
     Qt6::Charts
-    #Qt6::Concurrent
     thorlabs
+    mightex
 )
 
 set_target_properties(Camera2D PROPERTIES

@@ -11,6 +11,7 @@ exportWindow::exportWindow(QWidget *parent)
 {
     setUpUI();
     connect(buttonOK, &QPushButton::clicked, this, &exportWindow::saveFiles);
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 /*!
@@ -19,7 +20,11 @@ exportWindow::exportWindow(QWidget *parent)
  * Destructor
  * 
  */
-exportWindow::~exportWindow() {}
+exportWindow::~exportWindow()
+{
+    std::clog << "Destroy Export Window" << std::endl;
+    buttonExport->setDisabled(false);
+}
 
 /*!
  * \brief exportWindow::setUpUI
@@ -290,6 +295,20 @@ void exportWindow::saveFiles()
         cam->Start();
     }
     close();
+}
+
+/*!
+ * \brief exportWindow::setButtonExport
+ * \param newButtonExport
+ * 
+ * Setter for controlling button export
+ * Disable it the time the export window is open
+ * 
+ */
+void exportWindow::setButtonExport(QPushButton *newButtonExport)
+{
+    buttonExport = newButtonExport;
+    buttonExport->setDisabled(true);
 }
 
 /*!

@@ -614,3 +614,12 @@ QPoint GLDisplay::NDCToScreenOpengGL(QPointF *p)
 
     return QPoint(xScreen, yScreen);
 }
+
+/*!
+ * \brief GLDisplay::getCroix
+ * \return QPoint croix
+ */
+QPoint GLDisplay::getCroix() const
+{
+    return croix.toPoint();
+}

@@ -38,6 +38,8 @@ ConnectWindow::ConnectWindow(QWidget *parent)
 
     std::clog << "ConnecWindow :: Constructor. Thread : " << QThread::currentThreadId()
               << std::endl;
+
+    //setAttribute(Qt::WA_DeleteOnClose);
 }
 
 /*!
@@ -46,7 +48,10 @@ ConnectWindow::ConnectWindow(QWidget *parent)
     Destructor of the connect Window.
     Nothing to do !
 */
-ConnectWindow::~ConnectWindow() {}
+ConnectWindow::~ConnectWindow()
+{
+    std::clog << "Destroy connectWindow" << std::endl;
+}
 
 /*!
     \fn void void ConnectWindow::refresh()

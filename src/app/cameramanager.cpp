@@ -27,6 +27,8 @@ CameraManager::~CameraManager()
 {
     if (isCamera)
         delete camera;
+
+    std::clog << "Destroy Cam Manager" << std::endl;
 }
 
 /*!
