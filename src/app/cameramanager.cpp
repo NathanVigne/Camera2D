@@ -136,7 +136,7 @@ void CameraManager::CameraConnect(int id)
             QThread::currentThread()->quit();
             return;
         }
-        camera->Initialize();
+        //camera->Initialize();
         emit signal_EndOfCamConnect(camera, type);
         QThread::currentThread()->quit();
         return;

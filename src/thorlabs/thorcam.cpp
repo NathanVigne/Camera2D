@@ -331,13 +331,20 @@ void ThorCam::Initialize()
     LoadInfo();
 
     // initialize buffer for the Frame callBack
-    temp_image_buffer = (unsigned short *) malloc(sizeof(unsigned short) * sensorWidth_px
-                                                  * sensorHeight_px);
-    for (int i = 0; i < sensorHeight_px; ++i) {
-        for (int j = 0; j < sensorWidth_px; ++j) {
-            temp_image_buffer[i * sensorWidth_px + j] = 0;
+    m_mem->allocateMem(sensorWidth_px, sensorHeight_px, buff_type);
+
+    /*
+        unsigned short *temp0 = (unsigned short *) m_mem->current();
+        unsigned short *temp1 = (unsigned short *) m_mem->next();
+
+        for (int i = 0; i < sensorHeight_px; ++i) {
+            for (int j = 0; j < sensorWidth_px; ++j) {
+                temp0[i * sensorWidth_px + j] = 0;
+                temp1[i * sensorWidth_px + j] = 0;
+            }
         }
-    }
+*/
+
     temp_metadata_buffer = (unsigned char *) malloc(sizeof(unsigned char) * 7 * 8);
 }
 
@@ -708,9 +715,10 @@ void ThorCam::FrameAvailableCallback(void *sender,
     ThorCam *ctx = (ThorCam *) context;
     std::scoped_lock lock{*(ctx->m_mutex)};
 
-    memcpy(ctx->temp_image_buffer,
+    memcpy(ctx->m_mem->save(),
            image_buffer,
            (sizeof(unsigned short) * ctx->sensorHeight_px * ctx->sensorWidth_px));
     ctx->isFirstFrameFinished = true;
+    ctx->m_mem->swap();
     ctx->m_frameReadyCallback();
 }

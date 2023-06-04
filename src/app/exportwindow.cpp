@@ -212,7 +212,20 @@ void exportWindow::saveFiles()
                 QTextStream stream(&file);
                 for (int i = 0; i < h; ++i) {
                     for (int j = 0; j < w; ++j) {
-                        stream << static_cast<int>(cam->temp_image_buffer[i * w + j]) << "\t";
+                        switch (m_mem->type()) {
+                        case U8:
+                            stream << static_cast<int>(
+                                static_cast<unsigned char *>(m_mem->display())[i * w + j])
+                                   << "\t";
+                            break;
+                        case U16:
+                            stream << static_cast<int>(
+                                static_cast<unsigned short *>(m_mem->display())[i * w + j])
+                                   << "\t";
+                            break;
+                        case BUFF_END:
+                            break;
+                        }
                     }
                     stream << "\n"; // Start a new line for each buffer width
                 }
@@ -248,8 +261,19 @@ void exportWindow::saveFiles()
             // Perform file-saving operations
             for (int i = 0; i < h; ++i) {
                 for (int j = 0; j < w; ++j) {
-                    float x = float(cam->temp_image_buffer[i * w + j]) / float(maxVal);
-                    //x = float((i * h + j) % maxVal) / float(maxVal);
+                    switch (m_mem->type()) {
+                    case U8:
+                        x = float(static_cast<unsigned char *>(m_mem->display())[i * w + j])
+                            / float(maxVal);
+                        break;
+                    case U16:
+                        x = float(static_cast<unsigned short *>(m_mem->display())[i * w + j])
+                            / float(maxVal);
+                        break;
+                    case BUFF_END:
+                        x = 0;
+                        break;
+                    }
                     switch (colChoice) {
                     case MONO:
                         col.setRgbF(x, x, x);
@@ -295,6 +319,18 @@ void exportWindow::saveFiles()
         cam->Start();
     }
     close();
+}
+
+/*!
+ * \brief exportWindow::setMem
+ * \param newMem
+ * 
+ * setter
+ * 
+ */
+void exportWindow::setMem(MemoryManager *newMem)
+{
+    m_mem = newMem;
 }
 
 /*!

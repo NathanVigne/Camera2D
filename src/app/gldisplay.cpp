@@ -22,6 +22,17 @@ GLDisplay::~GLDisplay()
     delete textures;
     delete program;
     doneCurrent();
+
+    switch (buff_type) {
+    case U8:
+        delete static_cast<unsigned char *>(private_buffer);
+        break;
+    case U16:
+        delete static_cast<unsigned short *>(private_buffer);
+        break;
+    case BUFF_END:
+        break;
+    }
 }
 
 /*!
@@ -45,11 +56,23 @@ void GLDisplay::resetZoom()
  * \param unsigned short *buffer pointer to the data from the camera
  * \param QMutex *mutex pointer to the mutex for locking buffer 
  */
-void GLDisplay::setTexture(unsigned short *buffer, std::mutex *mutex)
+void GLDisplay::setTexture(void *buffer, std::mutex *mutex)
 {
     std::scoped_lock locker{*mutex};
-    textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
-    std::clog << "GlDispay : Set Texture : test Value : " << buffer[400] << std::endl;
+    switch (buff_type) {
+    case U8:
+        textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8, buffer);
+        std::clog << "GlDispay : Set Texture : test Value : "
+                  << static_cast<unsigned char *>(buffer)[400] << std::endl;
+        break;
+    case U16:
+        textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
+        std::clog << "GlDispay : Set Texture : test Value : "
+                  << static_cast<unsigned short *>(buffer)[400] << std::endl;
+        break;
+    case BUFF_END:
+        break;
+    }
 }
 
 /*!

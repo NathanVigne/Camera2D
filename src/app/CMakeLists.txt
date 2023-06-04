@@ -6,6 +6,7 @@ set(PROJECT_SOURCES
     gldisplay.cpp
     exportwindow.cpp
     mychart.cpp
+    memorymanager.cpp
 )
 
 set(PROJECT_HEADERS
@@ -16,6 +17,7 @@ set(PROJECT_HEADERS
     gldisplay.h
     exportwindow.h
     mychart.h
+    memorymanager.h
 )
 
 set(POJECT_RESSOURCES

@@ -65,6 +65,8 @@ private:
                                        unsigned char *metadata,
                                        int metadata_size_in_bytes,
                                        void *context);
+
+    unsigned char *temp_metadata_buffer;
 };
 
 #endif // THORCAM_H

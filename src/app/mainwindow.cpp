@@ -11,6 +11,9 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    // Instanciate the memory managment
+    mem = new MemoryManager(&m_mutex);
+
     setWindowIcon(QIcon(":/icon/cam_ico.png"));
     uiSetUp();
     resize(1200, 600);
@@ -58,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     std::clog << "Destroy MainWindow " << std::endl;
+    delete mem;
 }
 
 /*!
@@ -70,7 +74,7 @@ MainWindow::~MainWindow()
  */
 void MainWindow::callBackDraw()
 {
-    mainDisplay->setTexture(cam->temp_image_buffer, &m_mutex);
+    mainDisplay->setTexture(mem->display(), &m_mutex);
     mainDisplay->update();
 
     // Get 1D cuts TO Test ???
@@ -79,18 +83,20 @@ void MainWindow::callBackDraw()
     int w = mainDisplay->getTexWidth();
     int h = mainDisplay->getTexHeigth();
 
+    /*
     std::scoped_lock locker{m_mutex};
     for (int i = 0; i < std::max(w, h); ++i) {
         if (i < w) {
-            xcutDisplay->temp_X.push_back((int) cam->temp_image_buffer[posCroix.x() * w + i]);
+            xcutDisplay->temp_X.push_back((int) mem->next()[posCroix.x() * w + i]);
         }
         if (i < h) {
-            ycutDisplay->temp_Y.push_back((int) cam->temp_image_buffer[i * w + posCroix.y()]);
+            ycutDisplay->temp_Y.push_back((int) mem->next()[i * w + posCroix.y()]);
         }
     }
     // Need to compute the Fit ??
-    xcutDisplay->addDataPoint(xcutDisplay->temp_X, 0);
-    ycutDisplay->addDataPoint(ycutDisplay->temp_Y, 0);
+    // xcutDisplay->addDataPoint(xcutDisplay->temp_X, 0);
+    // ycutDisplay->addDataPoint(ycutDisplay->temp_Y, 0);
+    */
 }
 
 /*!
@@ -112,6 +118,19 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     cam = camera;
     std::clog << "ICamera pointer : " << cam << std::endl;
     cam_type = type;
+
+    // set up & initiialize cam
+    // Set cam mutex
+    cam->setMutex(&m_mutex);
+    // Set memory managment
+    cam->setMemory(mem);
+    // connect callback for drawing
+    cam->setFrameReadyCallback([this]() { this->sendFrameReady(); });
+    cam->setDisconnectCbck([this]() { this->sendDisconnect(); });
+    cam->setConnectCbck([this]() { this->sendReConnect(); });
+    cam->Initialize();
+
+    // Inittialize UI and cam controls
     mainDisplay->setBit_depth(cam->getBitDepth());
     mainDisplay->setBuff_type(cam->getBuffType());
 
@@ -136,14 +155,6 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     sliderExposure->setMaximum(max);
     sliderExposure->setValue((int) cam->getMinExposure());
     cam->SetExposure(cam->getMinExposure());
-
-    // Set cam mutex
-    cam->setMutex(&m_mutex);
-
-    // connect callback for drawing
-    cam->setFrameReadyCallback([this]() { this->sendFrameReady(); });
-    cam->setDisconnectCbck([this]() { this->sendDisconnect(); });
-    cam->setConnectCbck([this]() { this->sendReConnect(); });
 
     // Show display
     rbMonochrome->setChecked(true);
@@ -212,6 +223,7 @@ void MainWindow::slot_Export()
     exW->setColChoice(mainDisplay->getColorChoice());
     exW->setCam(cam);
     exW->setMutex(&m_mutex);
+    exW->setMem(mem);
     exW->show();
     cam->Stop();
 }

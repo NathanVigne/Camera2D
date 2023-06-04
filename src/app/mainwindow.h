@@ -18,6 +18,7 @@
 #include "exportwindow.h"
 #include "gldisplay.h"
 #include "icamera.h"
+#include "memorymanager.h"
 #include "mychart.h"
 #include <iostream>
 #include <mutex>
@@ -73,6 +74,7 @@ private:
     ICamera *cam = nullptr;
     bool isRunning = false;
     std::mutex m_mutex;
+    MemoryManager *mem;
     CAMERATYPE cam_type;
     QMessageBox *msg;
 

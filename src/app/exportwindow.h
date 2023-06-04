@@ -30,6 +30,8 @@ public:
 
     void setButtonExport(QPushButton *newButtonExport);
 
+    void setMem(MemoryManager *newMem);
+
 private:
     void setUpUI();
     QColor colorMap(float x);
@@ -40,6 +42,7 @@ private slots:
 
 private:
     std::mutex *m_mutex;
+    MemoryManager *m_mem;
     ICamera *cam;
     ColorChoice colChoice;
     bool isRunning = false;

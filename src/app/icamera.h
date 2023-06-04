@@ -1,6 +1,7 @@
 #ifndef ICAMERA_H
 #define ICAMERA_H
 
+#include "memorymanager.h"
 #include <functional>
 #include <mutex>
 #include <string>
@@ -14,7 +15,6 @@ struct CamNamesIDs
 
 enum TRIGGER { CONTINUOUS, SINGLE_SHOT, TRIGGER_END };
 
-enum BUFFTYPE { U8, U16, BUFF_END };
 
 /// \brief Camera interface
 class ICamera
@@ -37,6 +37,7 @@ public:
     virtual void Initialize() = 0;
 
     // Setter and Getter
+    void setMemory(MemoryManager *mem) { m_mem = mem; };
     void setMutex(std::mutex *mut) { m_mutex = mut; };
     std::mutex *getMutex() { return m_mutex; };
     double getMinGain() { return min_gain; };
@@ -51,9 +52,6 @@ public:
     virtual void setFrameReadyCallback(std::function<void()> frameReadyCallback) = 0;
     virtual void setDisconnectCbck(std::function<void()> disconnectCbck) = 0;
     virtual void setConnectCbck(std::function<void()> connectCbck) = 0;
-
-    // TO DO : check usefullnes ?
-    unsigned short *temp_image_buffer = nullptr;
 
 protected:
     // callBack = emit signal when frame ready
@@ -76,8 +74,6 @@ protected:
     int bit_depth = 0;
     BUFFTYPE buff_type = BUFF_END;
     std::mutex *m_mutex;
-
-    unsigned char *temp_metadata_buffer = nullptr;
+    MemoryManager *m_mem;
 };
-
 #endif // ICAMERA_H

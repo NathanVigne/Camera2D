@@ -24,7 +24,7 @@ public:
     ~GLDisplay();
 
     void resetZoom();
-    void setTexture(unsigned short *buffer, std::mutex *mutex);
+    void setTexture(void *buffer, std::mutex *mutex);
 
     // public getter/setter to get image widht and heiht
     int getTexHeigth() const;
