@@ -9,20 +9,26 @@ enum BUFFTYPE { U8, U16, BUFF_END };
 class MemoryManager
 {
 public:
-    MemoryManager(std::mutex *mutex);
+    MemoryManager(std::mutex *mutexSave, std::mutex *mutexDisplay);
     ~MemoryManager();
 
     void allocateMem(int width, int height, BUFFTYPE type);
     void swap();
     void *save() const;
     void *display() const;
-    void setMutex(std::mutex *newMutex);
 
     BUFFTYPE type() const;
 
+    int getWidth() const;
+    int getHeight() const;
+
 private:
-    std::mutex *mutex_;
+    std::mutex *Smutex_;
+    std::mutex *Dmutex_;
+
     BUFFTYPE type_;
+    int width_;
+    int height_;
 
     // pointer to the current buffer
     void *current_;

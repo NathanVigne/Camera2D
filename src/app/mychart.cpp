@@ -33,37 +33,43 @@ MyChart::~MyChart() {}
 
 /*!
  * \brief MyChart::addDataPoint
- * \param std::vector<int> &datas
- * \param int xoffset
+ * \param int offset
  * 
  * Add data to the courbeData scatters serie
  * 
  * update the x-axis by taking into account the xoffset
  * 
  */
-void MyChart::addDataPoint(std::vector<int> &datas, int xoffset)
+void MyChart::addDataPoint(int offset)
 {
-    courbeData->clear();
-    for (int i = 0; i < datas.size(); ++i) {
-        courbeData->append(QPointF(i - xoffset, datas[i]));
-    }
-    axisX->setRange(-xoffset, datas.size() - 1 - xoffset);
+    courbeData->replace(data);
+    axisX->setRange(-offset, data.size() - 1 - offset);
 }
 
 /*!
  * \brief MyChart::addFitPoint
- * \param std::vector<int> &datas
- * \param xoffset
+ * \param offset
  * 
  * Add data to the courbefir lineserie
  * 
+ * TO DO : compute fit
+ * 
  */
-void MyChart::addFitPoint(std::vector<int> &datas, int xoffset)
+void MyChart::addFitPoint(int offset)
 {
-    courbeFit->clear();
-    for (int i = 0; i < datas.size(); ++i) {
-        courbeFit->append(QPointF(i - xoffset, datas[i]));
-    }
+    courbeFit->replace(fit);
+}
+
+/*!
+ * \brief MyChart::setMem
+ * \param newMem
+ * 
+ * setter for the memory manager to use
+ * 
+ */
+void MyChart::setMem(MemoryManager *newMem)
+{
+    m_mem = newMem;
 }
 
 /*!
@@ -82,14 +88,13 @@ void MyChart::setUpChart()
     // Courbe style for Data
     courbeData->setColor(penColor);
     courbeData->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    courbeData->setMarkerSize(3);
+    courbeData->setMarkerSize(1.5);
     courbeData->setUseOpenGL(true);
 
     // Courbe style for Fit
     QPen pen(penColor);
     pen.setWidth(1);
-    pen.setStyle(Qt::DashLine);
-    courbeFit->setPen(pen);
+    pen.setStyle(Qt::DashLine);    courbeFit->setPen(pen);
 
     // Creat new chart with two series (Data & Fit)
     graphe = new QChart();
@@ -152,6 +157,70 @@ void MyChart::setUpChart()
 }
 
 /*!
+ * \brief MyChart::getDatas
+ * \param int &offset
+ * \param int &size
+ * \param int &XY (0 for X graphh, 1 for Y grpah)
+ * \param int &axe_offset
+ * \param std::mutex &mutex_
+ * 
+ * Load data from the display buffer onto the QList<QPointF> private property
+ * 
+ * TO DO on other thread ??? maybe not since double buffer prevent a lot
+ * of memory conflict !
+ * 
+ */
+void MyChart::getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_)
+{
+    std::scoped_lock locker{*mutex_};
+    int w = m_mem->getWidth();
+
+    qreal x = 0;
+    qreal y = 0;
+    data.clear();
+
+    // For X display
+    if (XY == 0) {
+        for (int i = 0; i < size; ++i) {
+            switch (m_mem->type()) {
+            case U8:
+                y = float(static_cast<unsigned char *>(m_mem->display())[offset * w + i]);
+                x = float(i - axe_offset);
+                break;
+            case U16:
+                y = float(static_cast<unsigned short *>(m_mem->display())[offset * w + i]);
+                x = float(i - axe_offset);
+                break;
+            case BUFF_END:
+                x = float(i - axe_offset);
+                break;
+            }
+            data.append(QPointF(x, y));
+        }
+    }
+
+    // For Y display
+    if (XY == 1) {
+        for (int i = 0; i < size; ++i) {
+            switch (m_mem->type()) {
+            case U8:
+                y = float(static_cast<unsigned char *>(m_mem->display())[i * w + offset]);
+                x = float(i - axe_offset);
+                break;
+            case U16:
+                y = float(static_cast<unsigned short *>(m_mem->display())[i * w + offset]);
+                x = float(i - axe_offset);
+                break;
+            case BUFF_END:
+                x = float(i - axe_offset);
+                break;
+            }
+            data.append(QPointF(x, y));
+        }
+    }
+}
+
+/*!
  * \brief MyChart::setMaxY
  * \param int newMaxY
  * 
@@ -162,4 +231,25 @@ void MyChart::setMaxY(int newMaxY)
 {
     maxY = newMaxY;
     axisY->setRange(0, maxY);
+}
+
+/*!
+ * \brief MyChart::myUpdate
+ * \param int &offset
+ * \param int &size
+ * \param int &XY (0 for X grpah. 1 for Y graph)
+ * \param int &axe_offset
+ * \param std::mutex *mutex_
+ * 
+ * Update the graphe
+ * 
+ * Laod data using the memory manager + display on chart
+ * 
+ * TO DO compute fit
+ * 
+ */
+void MyChart::myUpdate(int &mem_offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_)
+{
+    getDatas(mem_offset, size, XY, axe_offset, mutex_);
+    addDataPoint(axe_offset);
 }

@@ -55,6 +55,9 @@ void GLDisplay::resetZoom()
  * \brief GLDisplay::setTexture
  * \param unsigned short *buffer pointer to the data from the camera
  * \param QMutex *mutex pointer to the mutex for locking buffer 
+ * 
+ * set texture data depending on buffer type
+ * 
  */
 void GLDisplay::setTexture(void *buffer, std::mutex *mutex)
 {
@@ -641,8 +644,26 @@ QPoint GLDisplay::NDCToScreenOpengGL(QPointF *p)
 /*!
  * \brief GLDisplay::getCroix
  * \return QPoint croix
+ * 
+ * return the buffer coordiante from the croix position
+ * 
  */
-QPoint GLDisplay::getCroix() const
+QPoint GLDisplay::getCroix()
 {
-    return croix.toPoint();
+    int x = (croix.x() + 1.0) / 2.0 * texWidth;
+    int y = (croix.y() + 1.0) / 2.0 * texHeigth;
+
+    if (x < 0) {
+        x = 0;
+    }
+    if (x > (texWidth - 1)) {
+        x = texWidth - 1;
+    }
+    if (y < 0) {
+        y = 0;
+    }
+    if (y > (texHeigth - 1)) {
+        y = texHeigth - 1;
+    }
+    return QPoint(x, y);
 }

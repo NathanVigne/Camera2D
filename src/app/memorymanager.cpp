@@ -1,10 +1,25 @@
 #include "memorymanager.h"
 
-MemoryManager::MemoryManager(std::mutex *mutex)
+/*!
+ * \brief MemoryManager::MemoryManager
+ * \param std::mutx *mutexSave
+ * \param std::mutex *mutexDisplay
+ * 
+ * memory mlanager constructor. Take two mutex one for the save buffer
+ * and one for the display buffer !
+ * 
+ */
+MemoryManager::MemoryManager(std::mutex *mutexSave, std::mutex *mutexDisplay)
 {
-    mutex_ = mutex;
+    Smutex_ = mutexSave;
+    Dmutex_ = mutexDisplay;
 }
 
+/*!
+ * \brief MemoryManager::~MemoryManager
+ * 
+ * Destructor used to clean up the allocated memory
+ */
 MemoryManager::~MemoryManager()
 {
     switch (type_) {
@@ -21,9 +36,21 @@ MemoryManager::~MemoryManager()
     }
 }
 
+/*!
+ * \brief MemoryManager::allocateMem
+ * \param int width
+ * \param int height
+ * \param BUFFTYPE type
+ * 
+ * Fonction to allocate the buffer memory. for generic purpose
+ * the buffer are defined as void* then the allocation is dependant 
+ * on the BUFFTYPE
+ */
 void MemoryManager::allocateMem(int width, int height, BUFFTYPE type)
 {
     type_ = type;
+    width_ = width;
+    height_ = height;
     switch (type_) {
     case U8:
         buffer0 = new unsigned char[width * height];
@@ -51,28 +78,66 @@ void MemoryManager::allocateMem(int width, int height, BUFFTYPE type)
  */
 void MemoryManager::swap()
 {
-    //std::scoped_lock locker{*mutex_};
+    std::scoped_lock lock(*Dmutex_);
     void *temp;
     temp = current_;
     current_ = next_;
     next_ = temp;
 }
 
-void MemoryManager::setMutex(std::mutex *newMutex)
-{
-    mutex_ = newMutex;
-}
-
+/*!
+ * \brief MemoryManager::type
+ * \return BUFFTYPE
+ * 
+ * Getter for the bufftype memory
+ * 
+ */
 BUFFTYPE MemoryManager::type() const
 {
     return type_;
 }
 
+/*!
+ * \brief MemoryManager::getWidth
+ * \return int
+ * 
+ * Getter for the buffer width
+ * 
+ */
+int MemoryManager::getWidth() const
+{
+    return width_;
+}
+
+/*!
+ * \brief MemoryManager::getHeight
+ * \return int
+ * 
+ * Getter for the buffer heigth
+ * 
+ */
+int MemoryManager::getHeight() const
+{
+    return height_;
+}
+
+/*!
+ * \brief MemoryManager::save
+ * \return void*
+ * 
+ * return the void* pointer to the "save" buffer
+ */
 void *MemoryManager::save() const
 {
     return current_;
 }
 
+/*!
+ * \brief MemoryManager::display
+ * \return void*
+ * 
+ * return the void* pointer to the "display" buffer
+ */
 void *MemoryManager::display() const
 {
     return next_;

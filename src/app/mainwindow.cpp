@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // Instanciate the memory managment
-    mem = new MemoryManager(&m_mutex);
+    mem = new MemoryManager(&m_mutexSave, &m_mutexDisplay);
 
     setWindowIcon(QIcon(":/icon/cam_ico.png"));
     uiSetUp();
@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     std::clog << "Destroy MainWindow " << std::endl;
-    delete mem;
+    delete mem; // for safety since all buffer are manage here
 }
 
 /*!
@@ -69,34 +69,32 @@ MainWindow::~MainWindow()
  * 
  * CallBack function called to draw on the GLDisplay !
  * 
- * TO DO : Move all memory managment to manager class ?
+ * And to get vector for 1D display
+ * 
+ * TO DO : move the 1D display to it's own thread or own
+ * draw routine ??
  * 
  */
 void MainWindow::callBackDraw()
 {
-    mainDisplay->setTexture(mem->display(), &m_mutex);
+    mainDisplay->setTexture(mem->display(), &m_mutexDisplay);
     mainDisplay->update();
 
     // Get 1D cuts TO Test ???
     // Move to a memory manager ?
-    QPoint posCroix = mainDisplay->getCroix();
+    int x = mainDisplay->getCroix().x();
+    int y = mainDisplay->getCroix().y();
     int w = mainDisplay->getTexWidth();
     int h = mainDisplay->getTexHeigth();
 
-    /*
-    std::scoped_lock locker{m_mutex};
-    for (int i = 0; i < std::max(w, h); ++i) {
-        if (i < w) {
-            xcutDisplay->temp_X.push_back((int) mem->next()[posCroix.x() * w + i]);
-        }
-        if (i < h) {
-            ycutDisplay->temp_Y.push_back((int) mem->next()[i * w + posCroix.y()]);
-        }
-    }
-    // Need to compute the Fit ??
-    // xcutDisplay->addDataPoint(xcutDisplay->temp_X, 0);
-    // ycutDisplay->addDataPoint(ycutDisplay->temp_Y, 0);
-    */
+    std::clog << "Offset x : " << x << std::endl;
+    std::clog << "Offset y : " << y << std::endl;
+
+    int XY = 0;
+    xcutDisplay->myUpdate(y, w, XY, x, &m_mutexDisplay);
+
+    XY = 1;
+    ycutDisplay->myUpdate(x, h, XY, y, &m_mutexDisplay);
 }
 
 /*!
@@ -121,7 +119,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 
     // set up & initiialize cam
     // Set cam mutex
-    cam->setMutex(&m_mutex);
+    cam->setMutex(&m_mutexSave);
     // Set memory managment
     cam->setMemory(mem);
     // connect callback for drawing
@@ -129,6 +127,12 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     cam->setDisconnectCbck([this]() { this->sendDisconnect(); });
     cam->setConnectCbck([this]() { this->sendReConnect(); });
     cam->Initialize();
+
+    // initialize chart
+    xcutDisplay->setMaxY(pow(2, cam->getBitDepth()));
+    xcutDisplay->setMem(mem);
+    ycutDisplay->setMaxY(pow(2, cam->getBitDepth()));
+    ycutDisplay->setMem(mem);
 
     // Inittialize UI and cam controls
     mainDisplay->setBit_depth(cam->getBitDepth());
@@ -222,7 +226,7 @@ void MainWindow::slot_Export()
     exW->setIsRunning(isRunning);
     exW->setColChoice(mainDisplay->getColorChoice());
     exW->setCam(cam);
-    exW->setMutex(&m_mutex);
+    exW->setMutex(&m_mutexDisplay);
     exW->setMem(mem);
     exW->show();
     cam->Stop();

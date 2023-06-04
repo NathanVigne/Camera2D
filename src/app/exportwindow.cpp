@@ -165,9 +165,11 @@ bool exportWindow::checkCheckBox()
 /*!
  * \brief exportWindow::saveFiles
  * 
- * Private slot called whand Ok button pressed
+ * Private slot called when Ok button pressed
  * It launch the file save window then save all selected files
  * also closes the window !
+ * 
+ * the save routines are dependant on buffer types
  * 
  */
 void exportWindow::saveFiles()

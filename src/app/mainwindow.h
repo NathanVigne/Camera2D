@@ -73,7 +73,8 @@ private:
 private:
     ICamera *cam = nullptr;
     bool isRunning = false;
-    std::mutex m_mutex;
+    std::mutex m_mutexSave;
+    std::mutex m_mutexDisplay;
     MemoryManager *mem;
     CAMERATYPE cam_type;
     QMessageBox *msg;
