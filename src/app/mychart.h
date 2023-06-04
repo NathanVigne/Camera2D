@@ -8,6 +8,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QValueAxis>
+#include "../levmar-2.5/levmar.h"
 #include "memorymanager.h"
 
 class MyChart : public QWidget

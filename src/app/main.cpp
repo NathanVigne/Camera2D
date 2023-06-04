@@ -5,6 +5,10 @@
 #include <QApplication>
 #include <QObject>
 
+#ifndef LM_DBL_PREC
+#error Program assumes that levmar has been compiled with double precision, see LM_DBL_PREC!
+#endif
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

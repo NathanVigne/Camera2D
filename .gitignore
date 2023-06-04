@@ -75,3 +75,9 @@ CMakeLists.txt.user*
 # Include dlls if they're in the CommonReferences directory
 !src/thorlabs/dlls/*/*.dll
 !src/mightex/dlls/*/*.dll
+!src/levmar-2.5/LAPACK/*/dlls/*.dll
+!src/levmar-2.5/BLAS/*/dlls/*.dll
+!src/levmar-2.5/mingw64_dll/*.dll
+
+
+

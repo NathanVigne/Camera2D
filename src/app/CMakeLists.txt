@@ -32,15 +32,6 @@ qt_add_executable(Camera2D
     ${POJECT_RESSOURCES}
 )
 
-add_custom_command(TARGET Camera2D POST_BUILD
-
-    # Adds a post-build event to MyTest  which executes "cmake - E copy_if_different..."
-    #                                               this is in-file                                                                    this is out-directory
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/thorlabs/dlls/Native_64_lib/" $<TARGET_FILE_DIR:Camera2D>
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/mightex/dlls/x64/" $<TARGET_FILE_DIR:Camera2D>
-)
-
-
 target_link_libraries(Camera2D PRIVATE
     Qt6::Core
     Qt6::Widgets
@@ -49,6 +40,7 @@ target_link_libraries(Camera2D PRIVATE
     Qt6::Charts
     thorlabs
     mightex
+    levmar
 )
 
 set_target_properties(Camera2D PROPERTIES
@@ -62,6 +54,16 @@ install(TARGETS Camera2D
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+add_custom_command(TARGET Camera2D POST_BUILD
+
+    # Adds a post-build event to MyTest  which executes "cmake - E copy_if_different..."
+    #                                               this is in-file                                                                    this is out-directory
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/thorlabs/dlls/Native_64_lib/" $<TARGET_FILE_DIR:Camera2D>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/mightex/dlls/x64/" $<TARGET_FILE_DIR:Camera2D>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/levmar-2.5/BLAS/x64/dlls/" $<TARGET_FILE_DIR:Camera2D>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/levmar-2.5/LAPACK/x64/dlls/" $<TARGET_FILE_DIR:Camera2D>
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/levmar-2.5/mingw64_dll/" $<TARGET_FILE_DIR:Camera2D>
+)
 
 qt_finalize_executable(Camera2D)
 
