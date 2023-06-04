@@ -177,6 +177,8 @@ void exportWindow::saveFiles()
     std::scoped_lock lock{*m_mutex};
     QMessageBox msgBox;
     msgBox.setWindowIcon(QIcon(":/icon/cam_ico.png"));
+    int h = 0;
+    int w = 0;
 
     if (!checkCheckBox()) {
         msgBox.setIcon(QMessageBox::Critical);
@@ -204,8 +206,8 @@ void exportWindow::saveFiles()
         // Check wich files to save !
         if (cbTXT->isChecked()) {
             // get buffer size
-            int h = cam->getSensorHeigth();
-            int w = cam->getSensorWidth();
+            h = cam->getSensorHeigth();
+            w = cam->getSensorWidth();
 
             QString filePath = directory + "/" + fi.baseName() + "-2D.txt";
             // Perform file-saving operations
@@ -242,11 +244,59 @@ void exportWindow::saveFiles()
         }
 
         if (cbX->isChecked()) {
-            // TO DO
+            // get buffer size
+            h = cam->getSensorHeigth();
+            w = cam->getSensorWidth();
+
+            QString filePath = directory + "/" + fi.baseName() + "-X.txt";
+            // Perform file-saving operations
+            QFile file(filePath);
+            if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream stream(&file);
+                stream << "X"
+                       << "\t"
+                       << "Y"
+                       << "\n";
+                for (int i = 0; i < w; ++i) {
+                    stream << xCut->getDataList()->at(i).x() << "\t"
+                           << xCut->getDataList()->at(i).y() << "\n"; // Start a new lineh
+                }
+                file.close();
+            } else {
+                msgBox.setIcon(QMessageBox::Critical);
+                msgBox.setText("Failed to save all files.");
+                msgBox.setWindowTitle("Error");
+                msgBox.exec();
+                return;
+            }
         }
 
         if (cbY->isChecked()) {
-            // TO DO
+            // get buffer size
+            h = cam->getSensorHeigth();
+            w = cam->getSensorWidth();
+
+            QString filePath = directory + "/" + fi.baseName() + "-Y.txt";
+            // Perform file-saving operations
+            QFile file(filePath);
+            if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream stream(&file);
+                stream << "X"
+                       << "\t"
+                       << "Y"
+                       << "\n";
+                for (int i = 0; i < h; ++i) {
+                    stream << yCut->getDataList()->at(i).x() << "\t"
+                           << yCut->getDataList()->at(i).y() << "\n"; // Start a new lineh
+                }
+                file.close();
+            } else {
+                msgBox.setIcon(QMessageBox::Critical);
+                msgBox.setText("Failed to save all files.");
+                msgBox.setWindowTitle("Error");
+                msgBox.exec();
+                return;
+            }
         }
 
         if (cbPNG->isChecked()) {
@@ -321,6 +371,30 @@ void exportWindow::saveFiles()
         cam->Start();
     }
     close();
+}
+
+/*!
+ * \brief exportWindow::setYCut
+ * \param newYCut
+ * 
+ * Setter
+ * 
+ */
+void exportWindow::setYCut(MyChart *newYCut)
+{
+    yCut = newYCut;
+}
+
+/*!
+ * \brief exportWindow::setXCut
+ * \param newXCut
+ * 
+ * setter
+ * 
+ */
+void exportWindow::setXCut(MyChart *newXCut)
+{
+    xCut = newXCut;
 }
 
 /*!

@@ -226,6 +226,8 @@ void MainWindow::slot_Export()
     exW->setIsRunning(isRunning);
     exW->setColChoice(mainDisplay->getColorChoice());
     exW->setCam(cam);
+    exW->setXCut(xcutDisplay);
+    exW->setYCut(ycutDisplay);
     exW->setMutex(&m_mutexDisplay);
     exW->setMem(mem);
     exW->show();

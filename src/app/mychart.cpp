@@ -61,6 +61,28 @@ void MyChart::addFitPoint(int offset)
 }
 
 /*!
+ * \brief MyChart::getDataList
+ * \return 
+ * 
+ * Get pointer to data list
+ */
+QList<QPointF> *MyChart::getDataList()
+{
+    return &data;
+}
+
+/*!
+ * \brief MyChart::getFitList
+ * \return 
+ * 
+ * Get pionter to fit list
+ */
+QList<QPointF> *MyChart::getFitList()
+{
+    return &fit;
+}
+
+/*!
  * \brief MyChart::setMem
  * \param newMem
  * 

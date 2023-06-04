@@ -11,6 +11,7 @@
 #include <QWidget>
 #include "gldisplay.h"
 #include "icamera.h"
+#include "mychart.h"
 #include <mutex>
 
 class exportWindow : public QWidget
@@ -32,6 +33,10 @@ public:
 
     void setMem(MemoryManager *newMem);
 
+    void setXCut(MyChart *newXCut);
+
+    void setYCut(MyChart *newYCut);
+
 private:
     void setUpUI();
     QColor colorMap(float x);
@@ -44,6 +49,8 @@ private:
     std::mutex *m_mutex;
     MemoryManager *m_mem;
     ICamera *cam;
+    MyChart *xCut;
+    MyChart *yCut;
     ColorChoice colChoice;
     bool isRunning = false;
 

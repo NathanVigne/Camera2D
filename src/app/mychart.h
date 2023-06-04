@@ -21,6 +21,9 @@ public:
     void myUpdate(int &mem_offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_);
     void setMem(MemoryManager *newMem);
 
+    QList<QPointF> *getDataList();
+    QList<QPointF> *getFitList();
+
 private:
     void setUpChart();
     void getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_);
