@@ -21,7 +21,7 @@ WorkerFit::WorkerFit(
 
     // Define the function to minimize
     fdf.f = &WorkerFit::expb_f;
-    fdf.df = NULL;  //&worker::expb_df; //set to NULL for finite-difference Jacobian
+    fdf.df = &WorkerFit::expb_df; //&worker::expb_df; //set to NULL for finite-difference Jacobian
     fdf.fvv = NULL; // not using geodesic acceleration
     fdf.n = n;
     fdf.p = p;
@@ -172,7 +172,7 @@ void WorkerFit::calcFitDatas()
 
     double A = gsl_vector_get(w->x, 0);
     double x0 = gsl_vector_get(w->x, 1);
-    double w0 = gsl_vector_get(w->x, 2);
+    double w0 = abs(gsl_vector_get(w->x, 2));
     double b = gsl_vector_get(w->x, 3);
     m_fitParam[0] = A;
     m_fitParam[1] = x0;
@@ -246,7 +246,28 @@ int WorkerFit::expb_f(const gsl_vector *x, void *data, gsl_vector *f)
 }
 
 // TO DO
-int WorkerFit::expb_df(const gsl_vector *x, void *data, gsl_matrix *f)
+int WorkerFit::expb_df(const gsl_vector *x, void *data, gsl_matrix *J)
 {
+    size_t n = ((struct data *) data)->n;
+    double *t = ((struct data *) data)->t;
+
+    double A = gsl_vector_get(x, 0);
+    double x0 = gsl_vector_get(x, 1);
+    double w0 = gsl_vector_get(x, 2);
+    double b = gsl_vector_get(x, 3);
+
+    size_t i;
+    for (i = 0; i < n; i++) {
+        /* Jacobian matrix J(i,j) = dfi / dxj, */
+        /* where fi = (Yi - yi)/sigma[i],      */
+        /*       Yi = A * exp(-2 (t_i-x0)^2/w0^2) + b  */
+        /* and the xj are the parameters (A,x0,w0,b) */
+        double e = exp(-2 * pow(t[i] - x0, 2) / pow(w0, 2));
+        gsl_matrix_set(J, i, 0, e);
+        gsl_matrix_set(J, i, 1, (4 * (t[i] - x0) / pow(w0, 2)) * A * e);
+        gsl_matrix_set(J, i, 2, (4 * pow(t[i] - x0, 2) / pow(w0, 3)) * A * e);
+        gsl_matrix_set(J, i, 3, 1.0);
+    }
+
     return GSL_SUCCESS;
 }

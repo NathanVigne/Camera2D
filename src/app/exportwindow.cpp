@@ -253,10 +253,13 @@ void exportWindow::saveFiles()
             QFile file(filePath);
             if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QTextStream stream(&file);
-                stream << "X"
-                       << "\t"
-                       << "Y"
-                       << "\n";
+                double A, x0, w0, b;
+                A = xCut->getFitParam(0);
+                x0 = xCut->getFitParam(1);
+                w0 = xCut->getFitParam(2);
+                b = xCut->getFitParam(3);
+                stream << "X\tY\tFit param: A = " << A << "\tx0 = " << x0 << "\tw0 = " << w0
+                       << "\tb = " << b << "\n";
                 for (int i = 0; i < w; ++i) {
                     stream << xCut->getDataList()->at(i).x() << "\t"
                            << xCut->getDataList()->at(i).y() << "\n"; // Start a new lineh
@@ -281,10 +284,13 @@ void exportWindow::saveFiles()
             QFile file(filePath);
             if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QTextStream stream(&file);
-                stream << "X"
-                       << "\t"
-                       << "Y"
-                       << "\n";
+                double A, x0, w0, b;
+                A = xCut->getFitParam(0);
+                x0 = xCut->getFitParam(1);
+                w0 = xCut->getFitParam(2);
+                b = xCut->getFitParam(3);
+                stream << "X\tY\tFit param: A = " << A << "\tx0 = " << x0 << "\tw0 = " << w0
+                       << "\tb = " << b << "\n";
                 for (int i = 0; i < h; ++i) {
                     stream << yCut->getDataList()->at(i).x() << "\t"
                            << yCut->getDataList()->at(i).y() << "\n"; // Start a new lineh

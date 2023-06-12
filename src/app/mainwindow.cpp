@@ -88,8 +88,8 @@ void MainWindow::callBackDraw()
     std::clog << "Offset x : " << x << std::endl;
     std::clog << "Offset y : " << y << std::endl;
 
-    xcutDisplay->myUpdate(y, x, &m_mutexDisplay);
-    ycutDisplay->myUpdate(x, y, &m_mutexDisplay);
+    xcutDisplay->myUpdate(y, &m_mutexDisplay);
+    ycutDisplay->myUpdate(x, &m_mutexDisplay);
 }
 
 /*!

@@ -22,11 +22,11 @@ public:
     ~MyChart();
 
     void setMaxY(int newMaxY);
-    void myUpdate(int &mem_offset, int &axe_offset, std::mutex *mutex_);
+    void myUpdate(int &mem_offset, std::mutex *mutex_);
     void setMem(MemoryManager *newMem);
 
     QList<QPointF> *getDataList();
-    QList<QPointF> *getFitList();
+    double getFitParam(int id);
 
     void setSize(size_t newN);
     void setUpWorker();
@@ -43,9 +43,9 @@ private slots:
 private:
     void setUpChart();
     void myConnection();
-    void getDatas(int &offset, int &axe_offset, std::mutex *mutex_);
-    void drawData(int offset);
-    void drawFit(int offset);
+    void getDatas(int &offset, std::mutex *mutex_);
+    void drawData();
+    void drawFit();
 
 private:
     // General properties

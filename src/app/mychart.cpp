@@ -34,13 +34,7 @@ MyChart::MyChart(const int _axe_XY, QColor pen_Color, int bitDepth, QWidget *par
  * Destructor
  * 
  */
-MyChart::~MyChart()
-{
-    delete[] d_data;
-    delete[] f_data;
-    delete[] f_param;
-    delete[] dummy_data;
-}
+MyChart::~MyChart() {}
 
 /*!
  * \brief MyChart::addDataPoint
@@ -51,12 +45,9 @@ MyChart::~MyChart()
  * update the x-axis by taking into account the xoffset
  * 
  */
-void MyChart::drawData(int offset)
+void MyChart::drawData()
 {
     m_serieData->replace(data);
-    axisX->setRange(0, data.size() - 1);
-
-    //axisX->setRange(-offset, data.size() - 1 - offset);
 }
 
 /*!
@@ -68,7 +59,7 @@ void MyChart::drawData(int offset)
  * TO DO : compute fit
  * 
  */
-void MyChart::drawFit(int offset)
+void MyChart::drawFit()
 {
     m_serieFit->replace(fit);
 }
@@ -102,9 +93,9 @@ QList<QPointF> *MyChart::getDataList()
  * 
  * Get pionter to fit list
  */
-QList<QPointF> *MyChart::getFitList()
+double MyChart::getFitParam(int id)
 {
-    return &fit;
+    return f_param[id];
 }
 
 /*!
@@ -204,6 +195,7 @@ void MyChart::setUpChart()
     m_chart->addAxis(axisX, Qt::AlignBottom);
     m_serieFit->attachAxis(axisX);
     m_serieData->attachAxis(axisX);
+    axisX->setRange(0, N - 1);
 
     axisY = new QValueAxis();
     axisY->setRange(0, maxY);
@@ -300,7 +292,7 @@ void MyChart::myConnection()
  * of memory conflict !
  * 
  */
-void MyChart::getDatas(int &offset, int &axe_offset, std::mutex *mutex_)
+void MyChart::getDatas(int &offset, std::mutex *mutex_)
 {
     std::scoped_lock locker(*mutex_, m_mutex_fit);
     int w = m_mem->getWidth();
@@ -380,9 +372,9 @@ void MyChart::setMaxY(int newMaxY)
  * emit signal to compute fit / start fit ??!
  * 
  */
-void MyChart::myUpdate(int &mem_offset, int &axe_offset, std::mutex *mutex_)
+void MyChart::myUpdate(int &mem_offset, std::mutex *mutex_)
 {
-    getDatas(mem_offset, axe_offset, mutex_);
-    drawData(axe_offset);
-    drawFit(axe_offset);
+    getDatas(mem_offset, mutex_);
+    drawData();
+    drawFit();
 }
