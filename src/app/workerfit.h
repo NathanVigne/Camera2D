@@ -37,7 +37,7 @@ public:
     int setData(double *datas);
 
 signals:
-    void fitEND(double *fitDatas);
+    void fitEND(double *fitDatas, double *fitParam);
 
 private slots:
     void copyData(double *datas);
@@ -61,6 +61,7 @@ private:
     double *m_ydata;
     double *m_xdata;
     double *m_fitData;
+    double *m_fitParam;
     data d;
     double x0, w0, A, b;
     double *param_guess;

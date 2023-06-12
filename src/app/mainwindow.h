@@ -59,8 +59,8 @@ public slots:
     // Color slots
     void slot_Color(bool check);
 
-    // Check Box slots
-    // TO DO
+    void receivedLabelX(std::mutex *mutex, double *params);
+    void receivedLabelY(std::mutex *mutex, double *params);
 
 private:
     void uiSetUp();
@@ -69,6 +69,7 @@ private:
     void sendReConnect();
     void displayDisconnect();
     void displayReConnect();
+    void updateText();
 
 private:
     ICamera *cam = nullptr;
@@ -78,6 +79,11 @@ private:
     MemoryManager *mem;
     CAMERATYPE cam_type;
     QMessageBox *msg;
+
+    int wx_d;
+    int wy_d;
+    double wx_f;
+    double wy_f;
 
     // ----------------------------------------
     // Central widget

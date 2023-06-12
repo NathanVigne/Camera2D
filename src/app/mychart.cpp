@@ -38,6 +38,7 @@ MyChart::~MyChart()
 {
     delete[] d_data;
     delete[] f_data;
+    delete[] f_param;
     delete[] dummy_data;
 }
 
@@ -53,7 +54,9 @@ MyChart::~MyChart()
 void MyChart::drawData(int offset)
 {
     m_serieData->replace(data);
-    axisX->setRange(-offset, data.size() - 1 - offset);
+    axisX->setRange(0, data.size() - 1);
+
+    //axisX->setRange(-offset, data.size() - 1 - offset);
 }
 
 /*!
@@ -115,10 +118,11 @@ QList<QPointF> *MyChart::getFitList()
  * TO DO in the worker class into a different thread ?
  * 
  */
-void MyChart::copyFitData(double *fit_data)
+void MyChart::copyFitData(double *fit_data, double *fit_param)
 {
     std::scoped_lock lock(m_mutex_fit);
     memcpy(f_data, fit_data, sizeof(double) * N_fit);
+    memcpy(f_param, fit_param, sizeof(double) * P);
     emit receivedFit();
 }
 
@@ -130,10 +134,13 @@ void MyChart::copyFitData(double *fit_data)
  */
 void MyChart::processFitData()
 {
+    double x = 0.0;
     fit.clear();
     for (int i = 0; i < N_fit; ++i) {
-        fit.append(QPointF(i, f_data[i]));
+        x = i / ((double) (N_fit - 1)) * (N - 1);
+        fit.append(QPointF(x, f_data[i]));
     }
+    emit updateLabel(&m_mutex_fit, f_param);
 }
 
 /*!
@@ -244,6 +251,7 @@ void MyChart::setUpWorker()
 {
     if (!workerSet) {
         d_data = new double[N];
+        f_param = new double[P];
         work_fit = new WorkerFit(N, P, N_fit, &m_mutex_fit);
 
         dummy_data = new double[N];
@@ -307,14 +315,14 @@ void MyChart::getDatas(int &offset, int &axe_offset, std::mutex *mutex_)
             switch (m_mem->type()) {
             case U8:
                 y = float(static_cast<unsigned char *>(m_mem->display())[offset * w + i]);
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             case U16:
                 y = float(static_cast<unsigned short *>(m_mem->display())[offset * w + i]);
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             case BUFF_END:
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             }
             data.append(QPointF(x, y));
@@ -328,14 +336,14 @@ void MyChart::getDatas(int &offset, int &axe_offset, std::mutex *mutex_)
             switch (m_mem->type()) {
             case U8:
                 y = float(static_cast<unsigned char *>(m_mem->display())[i * w + offset]);
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             case U16:
                 y = float(static_cast<unsigned short *>(m_mem->display())[i * w + offset]);
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             case BUFF_END:
-                x = float(i - axe_offset);
+                x = i; //float(i - axe_offset);
                 break;
             }
             data.append(QPointF(x, y));

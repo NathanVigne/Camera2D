@@ -35,6 +35,7 @@ WorkerFit::WorkerFit(
 
     // Allocate space for fit param
     param_guess = new double[P];
+    m_fitParam = new double[P];
     m_fitData = new double[N_fit];
 
     // Move this object to a new thread !
@@ -48,6 +49,7 @@ WorkerFit::~WorkerFit()
     delete[] m_xdata;
     delete[] m_ydata;
     delete[] m_fitData;
+    delete[] m_fitParam;
 }
 
 void WorkerFit::startFitting(double *datas)
@@ -159,7 +161,7 @@ void WorkerFit::Fitting()
     std::clog << "status = " << gsl_strerror(status) << std::endl;
 */
 
-    emit fitEND(m_fitData);
+    emit fitEND(m_fitData, m_fitParam);
 }
 
 void WorkerFit::calcFitDatas()
@@ -167,10 +169,15 @@ void WorkerFit::calcFitDatas()
     std::scoped_lock lock(*m_mutex);
 
     // get params
+
     double A = gsl_vector_get(w->x, 0);
     double x0 = gsl_vector_get(w->x, 1);
     double w0 = gsl_vector_get(w->x, 2);
     double b = gsl_vector_get(w->x, 3);
+    m_fitParam[0] = A;
+    m_fitParam[1] = x0;
+    m_fitParam[2] = w0;
+    m_fitParam[3] = b;
     double x = 0.0;
 
     // calc Fit data

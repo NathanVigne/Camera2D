@@ -128,11 +128,21 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     xcutDisplay->setMem(mem);
     xcutDisplay->setSize(cam->getSensorWidth());
     xcutDisplay->setUpWorker();
+    connect(xcutDisplay,
+            &MyChart::updateLabel,
+            this,
+            &MainWindow::receivedLabelX,
+            Qt::QueuedConnection);
 
     ycutDisplay->setMaxY(pow(2, cam->getBitDepth()));
     ycutDisplay->setMem(mem);
     ycutDisplay->setSize(cam->getSensorHeigth());
     ycutDisplay->setUpWorker();
+    connect(ycutDisplay,
+            &MyChart::updateLabel,
+            this,
+            &MainWindow::receivedLabelY,
+            Qt::QueuedConnection);
 
     // Inittialize UI and cam controls
     mainDisplay->setBit_depth(cam->getBitDepth());
@@ -327,6 +337,31 @@ void MainWindow::slot_Color(bool check)
 }
 
 /*!
+ * \brief MainWindow::receivedLabelX
+ * \param mutex
+ * \param params
+ * 
+ * Slot called to update the fit label
+ * Called when fit is finised
+ * 
+ */
+void MainWindow::receivedLabelX(std::mutex *mutex, double *params)
+{
+    std::scoped_lock lock(*mutex);
+    wx_d = (int) params[2];
+    wx_f = params[2]; // TODO Add pixel multiplication
+    updateText();
+}
+
+void MainWindow::receivedLabelY(std::mutex *mutex, double *params)
+{
+    std::scoped_lock lock(*mutex);
+    wy_d = (int) params[2];
+    wy_f = params[2]; // TODO Add pixel multiplication
+    updateText();
+}
+
+/*!
  * \brief MainWindow::uiSetUp
  * 
  * function to set-up all the widget of the mainWindow
@@ -434,7 +469,8 @@ void MainWindow::uiSetUp()
     labelInfo->setMinimumHeight(80);
     labelInfo->setAlignment(Qt::AlignCenter);
     labelInfo->clear();
-    labelInfo->setText("\tX\t\t/\t\tY\nWaist : \txxx µm\t xxx µm\nOther : \txxx µm\t xxx µm");
+    labelInfo->setText(
+        "\t\tX\t|\tY\nWaist (px) : \t xxx \t|\t xxx \nWaist (µm) : \t xxx \t|\t xxx");
 
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
@@ -551,4 +587,22 @@ void MainWindow::displayReConnect()
         cam->Start();
     }
     msg->close();
+}
+
+/*!
+ * \brief MainWindow::updateText
+ * 
+ * function to update text label from the fit data
+ * 
+ */
+void MainWindow::updateText()
+{
+    char buffer[100];
+    sprintf(buffer,
+            "\t\tX\t|\tY\nWaist (px) : \t %d \t|\t %d \nWaist (µm) : \t %f \t|\t %f",
+            wx_d,
+            wy_d,
+            wx_f,
+            wy_f);
+    labelInfo->setText(buffer);
 }

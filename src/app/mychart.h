@@ -34,9 +34,10 @@ public:
 signals:
     void receivedFit();
     void receivedData(double *datas);
+    void updateLabel(std::mutex *mutex, double *params);
 
 private slots:
-    void copyFitData(double *fit_data);
+    void copyFitData(double *fit_data, double *fit_param);
     void processFitData();
 
 private:
@@ -75,6 +76,7 @@ private:
     double *d_data;
     double *dummy_data;
     double *f_data;
+    double *f_param;
     std::mutex m_mutex_fit;
     bool workerSet = false;
 };
