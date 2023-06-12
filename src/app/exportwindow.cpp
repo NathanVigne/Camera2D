@@ -354,10 +354,10 @@ void exportWindow::saveFiles()
             }
         }
 
-        msgBox.setIcon(QMessageBox::Information);
-        msgBox.setText("All File saved successfully.");
-        msgBox.setWindowTitle("Success");
-        msgBox.exec();
+        //        msgBox.setIcon(QMessageBox::Information);
+        //        msgBox.setText("All File saved successfully.");
+        //        msgBox.setWindowTitle("Success");
+        //        msgBox.exec();
 
     } else {
         msgBox.setIcon(QMessageBox::Critical);

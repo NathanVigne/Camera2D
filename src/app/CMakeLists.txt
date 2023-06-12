@@ -7,6 +7,7 @@ set(PROJECT_SOURCES
     exportwindow.cpp
     mychart.cpp
     memorymanager.cpp
+    workerfit.cpp
 )
 
 set(PROJECT_HEADERS
@@ -18,6 +19,7 @@ set(PROJECT_HEADERS
     exportwindow.h
     mychart.h
     memorymanager.h
+    workerfit.h
 )
 
 set(POJECT_RESSOURCES
@@ -38,9 +40,10 @@ target_link_libraries(Camera2D PRIVATE
     Qt6::OpenGLWidgets
     Qt6::OpenGL
     Qt6::Charts
+    GSL::gsl
+    GSL::gslcblas
     thorlabs
     mightex
-    levmar
 )
 
 set_target_properties(Camera2D PROPERTIES

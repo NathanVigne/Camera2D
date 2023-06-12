@@ -15,11 +15,16 @@
  * 
  * 
  */
-MyChart::MyChart(QWidget *parent, QColor pen_Color, int bitDepth)
+MyChart::MyChart(const int _axe_XY, QColor pen_Color, int bitDepth, QWidget *parent)
     : QWidget{parent}
+    , axe_XY(_axe_XY)
+    , penColor(pen_Color)
 {
+    // Initialize params
     maxY = int(pow(2, bitDepth)) - 1;
-    penColor = pen_Color;
+    f_data = new double[N_fit];
+
+    // Create chart
     setUpChart();
 }
 
@@ -29,7 +34,12 @@ MyChart::MyChart(QWidget *parent, QColor pen_Color, int bitDepth)
  * Destructor
  * 
  */
-MyChart::~MyChart() {}
+MyChart::~MyChart()
+{
+    delete[] d_data;
+    delete[] f_data;
+    delete[] dummy_data;
+}
 
 /*!
  * \brief MyChart::addDataPoint
@@ -40,9 +50,9 @@ MyChart::~MyChart() {}
  * update the x-axis by taking into account the xoffset
  * 
  */
-void MyChart::addDataPoint(int offset)
+void MyChart::drawData(int offset)
 {
-    courbeData->replace(data);
+    m_serieData->replace(data);
     axisX->setRange(-offset, data.size() - 1 - offset);
 }
 
@@ -55,9 +65,21 @@ void MyChart::addDataPoint(int offset)
  * TO DO : compute fit
  * 
  */
-void MyChart::addFitPoint(int offset)
+void MyChart::drawFit(int offset)
 {
-    courbeFit->replace(fit);
+    m_serieFit->replace(fit);
+}
+
+/*!
+ * \brief MyChart::setSize
+ * \param newN
+ * 
+ * Setter for the size of the cut
+ * 
+ */
+void MyChart::setSize(size_t newN)
+{
+    N = newN;
 }
 
 /*!
@@ -83,6 +105,38 @@ QList<QPointF> *MyChart::getFitList()
 }
 
 /*!
+ * \brief MyChart::copyFitData
+ * \param fit_params
+ * 
+ * Private slot called when fit is finished to copy
+ * the fit datas, emit a signal for transforming to QList
+ * then draw !
+ * 
+ * TO DO in the worker class into a different thread ?
+ * 
+ */
+void MyChart::copyFitData(double *fit_data)
+{
+    std::scoped_lock lock(m_mutex_fit);
+    memcpy(f_data, fit_data, sizeof(double) * N_fit);
+    emit receivedFit();
+}
+
+/*!
+ * \brief MyChart::processFitData
+ * 
+ * Private slot to proces the fit data (tranfor to QList)
+ *  * 
+ */
+void MyChart::processFitData()
+{
+    fit.clear();
+    for (int i = 0; i < N_fit; ++i) {
+        fit.append(QPointF(i, f_data[i]));
+    }
+}
+
+/*!
  * \brief MyChart::setMem
  * \param newMem
  * 
@@ -104,27 +158,28 @@ void MyChart::setMem(MemoryManager *newMem)
  */
 void MyChart::setUpChart()
 {
-    courbeData = new QScatterSeries();
-    courbeFit = new QLineSeries();
+    m_serieData = new QScatterSeries();
+    m_serieFit = new QLineSeries();
 
     // Courbe style for Data
-    courbeData->setColor(penColor);
-    courbeData->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    courbeData->setMarkerSize(1.5);
-    courbeData->setUseOpenGL(true);
+    m_serieData->setColor(penColor);
+    m_serieData->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    m_serieData->setMarkerSize(1.5);
+    m_serieData->setUseOpenGL(true);
 
     // Courbe style for Fit
     QPen pen(penColor);
     pen.setWidth(1);
-    pen.setStyle(Qt::DashLine);    courbeFit->setPen(pen);
+    pen.setStyle(Qt::DashLine);
+    m_serieFit->setPen(pen);
 
     // Creat new chart with two series (Data & Fit)
-    graphe = new QChart();
-    graphe->addSeries(courbeData);
-    graphe->addSeries(courbeFit);
+    m_chart = new QChart();
+    m_chart->addSeries(m_serieData);
+    m_chart->addSeries(m_serieFit);
 
     // No legend
-    graphe->legend()->hide();
+    m_chart->legend()->hide();
 
     // Axes Styles !
     QPen minorGrid = QPen(QColor(200, 200, 200));
@@ -139,9 +194,9 @@ void MyChart::setUpChart()
     axisX->setMinorGridLineVisible(true);
     axisX->setGridLinePen(majorGrid);
     axisX->setMinorGridLinePen(minorGrid);
-    graphe->addAxis(axisX, Qt::AlignBottom);
-    courbeFit->attachAxis(axisX);
-    courbeData->attachAxis(axisX);
+    m_chart->addAxis(axisX, Qt::AlignBottom);
+    m_serieFit->attachAxis(axisX);
+    m_serieData->attachAxis(axisX);
 
     axisY = new QValueAxis();
     axisY->setRange(0, maxY);
@@ -152,26 +207,26 @@ void MyChart::setUpChart()
     axisY->setMinorGridLineVisible(true);
     axisY->setGridLinePen(majorGrid);
     axisY->setMinorGridLinePen(minorGrid);
-    graphe->addAxis(axisY, Qt::AlignLeft);
-    courbeData->attachAxis(axisY);
-    courbeFit->attachAxis(axisY);
+    m_chart->addAxis(axisY, Qt::AlignLeft);
+    m_serieData->attachAxis(axisY);
+    m_serieFit->attachAxis(axisY);
 
     // Remove padding
-    graphe->setMargins(QMargins(0, 0, 0, 0));
+    m_chart->setMargins(QMargins(0, 0, 0, 0));
 
     // Remove roundness
     //graphe->setBackgroundRoundness(0);
 
     // Remove margin
-    graphe->layout()->setContentsMargins(0, 0, 0, 0);
+    m_chart->layout()->setContentsMargins(0, 0, 0, 0);
 
     // ChartView Widget (antialiasing renderer)
-    graphique = new QChartView(graphe);
-    graphique->setRenderHint(QPainter::Antialiasing);
+    m_chartView = new QChartView(m_chart);
+    m_chartView->setRenderHint(QPainter::Antialiasing);
 
     // Add to a layout otherwise it is hidden
     QGridLayout *layout = new QGridLayout(this);
-    layout->addWidget(graphique);
+    layout->addWidget(m_chartView);
     layout->setContentsMargins(0, 0, 0, 0);
 
     //All margins are remove !
@@ -179,22 +234,67 @@ void MyChart::setUpChart()
 }
 
 /*!
+ * \brief MyChart::setUpWorker
+ * 
+ * function to create the worker !
+ * 
+ * 
+ */
+void MyChart::setUpWorker()
+{
+    if (!workerSet) {
+        d_data = new double[N];
+        work_fit = new WorkerFit(N, P, N_fit, &m_mutex_fit);
+
+        dummy_data = new double[N];
+        for (int i = 0; i < N; i++) {
+            dummy_data[i] = 0;
+        }
+
+        // Connection
+        myConnection();
+
+        // Start Fit ! ??
+        work_fit->startFitting(dummy_data);
+        workerSet = true;
+    }
+}
+
+/*!
+ * \brief MyChart::connect
+ * 
+ * Set up all connection between worker and chart
+ * 
+ */
+void MyChart::myConnection()
+{
+    // connect end of copy fit to process fit
+    connect(this, &MyChart::receivedFit, this, &MyChart::processFitData);
+
+    // Connect seriesCahnge (whan new data arrived) to setData of the worker
+    connect(this, &MyChart::receivedData, work_fit, &WorkerFit::setData, Qt::QueuedConnection);
+
+    // Connect end fit to copy dataFit
+    connect(work_fit, &WorkerFit::fitEND, this, &MyChart::copyFitData, Qt::QueuedConnection);
+}
+
+/*!
  * \brief MyChart::getDatas
  * \param int &offset
- * \param int &size
- * \param int &XY (0 for X graphh, 1 for Y grpah)
  * \param int &axe_offset
  * \param std::mutex &mutex_
  * 
  * Load data from the display buffer onto the QList<QPointF> private property
+ * for quick display and onto the double array for quick copying into the 
+ * the workerFit
  * 
  * TO DO on other thread ??? maybe not since double buffer prevent a lot
  * of memory conflict !
  * 
  */
-void MyChart::getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_)
+void MyChart::getDatas(int &offset, int &axe_offset, std::mutex *mutex_)
 {
-    std::scoped_lock locker{*mutex_};
+    std::scoped_lock locker(*mutex_, m_mutex_fit);
     int w = m_mem->getWidth();
 
     qreal x = 0;
@@ -202,8 +302,8 @@ void MyChart::getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mu
     data.clear();
 
     // For X display
-    if (XY == 0) {
-        for (int i = 0; i < size; ++i) {
+    if (axe_XY == 0) {
+        for (int i = 0; i < N; ++i) {
             switch (m_mem->type()) {
             case U8:
                 y = float(static_cast<unsigned char *>(m_mem->display())[offset * w + i]);
@@ -218,12 +318,13 @@ void MyChart::getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mu
                 break;
             }
             data.append(QPointF(x, y));
+            d_data[i] = (double) y;
         }
     }
 
     // For Y display
-    if (XY == 1) {
-        for (int i = 0; i < size; ++i) {
+    if (axe_XY == 1) {
+        for (int i = 0; i < N; ++i) {
             switch (m_mem->type()) {
             case U8:
                 y = float(static_cast<unsigned char *>(m_mem->display())[i * w + offset]);
@@ -238,8 +339,11 @@ void MyChart::getDatas(int &offset, int &size, int &XY, int &axe_offset, std::mu
                 break;
             }
             data.append(QPointF(x, y));
+            d_data[i] = (double) y;
         }
     }
+
+    emit receivedData(d_data);
 }
 
 /*!
@@ -258,8 +362,6 @@ void MyChart::setMaxY(int newMaxY)
 /*!
  * \brief MyChart::myUpdate
  * \param int &offset
- * \param int &size
- * \param int &XY (0 for X grpah. 1 for Y graph)
  * \param int &axe_offset
  * \param std::mutex *mutex_
  * 
@@ -267,11 +369,12 @@ void MyChart::setMaxY(int newMaxY)
  * 
  * Laod data using the memory manager + display on chart
  * 
- * TO DO compute fit
+ * emit signal to compute fit / start fit ??!
  * 
  */
-void MyChart::myUpdate(int &mem_offset, int &size, int &XY, int &axe_offset, std::mutex *mutex_)
+void MyChart::myUpdate(int &mem_offset, int &axe_offset, std::mutex *mutex_)
 {
-    getDatas(mem_offset, size, XY, axe_offset, mutex_);
-    addDataPoint(axe_offset);
+    getDatas(mem_offset, axe_offset, mutex_);
+    drawData(axe_offset);
+    drawFit(axe_offset);
 }

@@ -84,17 +84,12 @@ void MainWindow::callBackDraw()
     // Move to a memory manager ?
     int x = mainDisplay->getCroix().x();
     int y = mainDisplay->getCroix().y();
-    int w = mainDisplay->getTexWidth();
-    int h = mainDisplay->getTexHeigth();
 
     std::clog << "Offset x : " << x << std::endl;
     std::clog << "Offset y : " << y << std::endl;
 
-    int XY = 0;
-    xcutDisplay->myUpdate(y, w, XY, x, &m_mutexDisplay);
-
-    XY = 1;
-    ycutDisplay->myUpdate(x, h, XY, y, &m_mutexDisplay);
+    xcutDisplay->myUpdate(y, x, &m_mutexDisplay);
+    ycutDisplay->myUpdate(x, y, &m_mutexDisplay);
 }
 
 /*!
@@ -131,8 +126,13 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     // initialize chart
     xcutDisplay->setMaxY(pow(2, cam->getBitDepth()));
     xcutDisplay->setMem(mem);
+    xcutDisplay->setSize(cam->getSensorWidth());
+    xcutDisplay->setUpWorker();
+
     ycutDisplay->setMaxY(pow(2, cam->getBitDepth()));
     ycutDisplay->setMem(mem);
+    ycutDisplay->setSize(cam->getSensorHeigth());
+    ycutDisplay->setUpWorker();
 
     // Inittialize UI and cam controls
     mainDisplay->setBit_depth(cam->getBitDepth());
@@ -413,8 +413,8 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     //xcutDisplay = new QGraphicsView(this);
     //ycutDisplay = new QGraphicsView(this);
-    xcutDisplay = new MyChart(this, QColor(0, 0, 255));
-    ycutDisplay = new MyChart(this, QColor(255, 0, 0));
+    xcutDisplay = new MyChart(0, QColor(0, 0, 255));
+    ycutDisplay = new MyChart(1, QColor(255, 0, 0));
 
     // Group Boxes
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
