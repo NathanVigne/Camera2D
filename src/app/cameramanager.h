@@ -4,9 +4,10 @@
 #include <QObject>
 #include <QThread>
 #include "icamera.h"
+#include "mightex.h"
 #include "thorcam.h"
 
-enum CAMERATYPE { THORLABS, CAMTYPE_LAST, MIGHTEX };
+enum CAMERATYPE { THORLABS, MIGHTEX, CAMTYPE_LAST };
 
 struct CamList
 {

@@ -6,6 +6,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <windows.h>
 
 struct CamNamesIDs
 {
@@ -48,6 +49,7 @@ public:
     int getSensorWidth() { return sensorWidth_px; };
     int getBitDepth() { return bit_depth; };
     BUFFTYPE getBuffType() { return buff_type; };
+    void setWinHandle(HWND newWinHandle);
 
     virtual void setFrameReadyCallback(std::function<void()> frameReadyCallback) = 0;
     virtual void setDisconnectCbck(std::function<void()> disconnectCbck) = 0;
@@ -75,5 +77,12 @@ protected:
     BUFFTYPE buff_type = BUFF_END;
     std::mutex *m_mutex;
     MemoryManager *m_mem;
+
+    HWND winHandle;
 };
+
+inline void ICamera::setWinHandle(HWND newWinHandle)
+{
+    winHandle = newWinHandle;
+}
 #endif // ICAMERA_H

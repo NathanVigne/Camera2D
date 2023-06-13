@@ -74,6 +74,7 @@ void MyChart::drawFit()
 void MyChart::setSize(size_t newN)
 {
     N = newN;
+    axisX->setRange(0, N - 1);
 }
 
 /*!
@@ -195,7 +196,7 @@ void MyChart::setUpChart()
     m_chart->addAxis(axisX, Qt::AlignBottom);
     m_serieFit->attachAxis(axisX);
     m_serieData->attachAxis(axisX);
-    axisX->setRange(0, N - 1);
+    //axisX->setRange(0, N - 1);
 
     axisY = new QValueAxis();
     axisY->setRange(0, maxY);

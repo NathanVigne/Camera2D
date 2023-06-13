@@ -91,6 +91,16 @@ void CameraManager::DiscoverCameras()
             break;
         case MIGHTEX:
             // TO DO mightex implementation
+            camera = new Mightex();
+            isCamera = true;
+            names_ids = camera->SearchCam();
+            for (int ind; ind < names_ids.names.size(); ind++) {
+                camera_list.name.push_back(names_ids.names[ind]);
+                camera_list.id.push_back(names_ids.ids[ind]);
+                camera_list.type.push_back(MIGHTEX);
+            }
+            delete camera;
+            isCamera = false;
             break;
         case CAMTYPE_LAST:
 
@@ -124,6 +134,10 @@ void CameraManager::CameraConnect(int id)
             break;
         case MIGHTEX:
             // TO DO mightex implementation
+            camera = new Mightex();
+            isCamera = true;
+            result = camera->Connect(camera_list.id[id]);
+            type = CAMERATYPE::MIGHTEX;
             break;
         case CAMTYPE_LAST:
             break;

@@ -157,13 +157,13 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     // Set exposure UI
     // in µs
     int min, max;
-    if (cam_type == CAMERATYPE::THORLABS) {
-        min = int(double(log10(cam->getMinExposure()) * 1000.0));
-        max = int(double(log10(cam->getMaxExposure()) * 1000.0));
-    } else {
-        min = (int) cam->getMinExposure();
-        max = (int) cam->getMaxExposure();
-    }
+    //    if (cam_type == CAMERATYPE::THORLABS) {
+    min = int(double(log10(cam->getMinExposure()) * 1000.0));
+    max = int(double(log10(cam->getMaxExposure()) * 1000.0));
+    //    } else {
+    //        min = (int) cam->getMinExposure();
+    //        max = (int) cam->getMaxExposure();
+    //    }
 
     sliderExposure->setMinimum(min);
     sliderExposure->setMaximum(max);
@@ -305,11 +305,11 @@ void MainWindow::slot_Gain(double newGain)
 void MainWindow::slot_Exposure(int newExposure)
 {
     float value;
-    if (cam_type == CAMERATYPE::THORLABS) {
-        value = std::pow(10, float(newExposure) / 1000.0);
-    } else {
-        value = float(newExposure);
-    }
+    //    if (cam_type == CAMERATYPE::THORLABS) {
+    value = std::pow(10, float(newExposure) / 1000.0);
+    //    } else {
+    //        value = float(newExposure);
+    //    }
 
     cam->SetExposure((long long) value);
 
