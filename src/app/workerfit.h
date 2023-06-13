@@ -32,9 +32,12 @@ public:
               QObject *parent = nullptr);
     ~WorkerFit();
 
-    void startFitting(double *datas);
     void setMutex(std::mutex *newMutex);
     int setData(double *datas);
+
+    void startLoop(int time_ms);
+    void stop();
+    void startsingle();
 
 signals:
     void fitEND(double *fitDatas, double *fitParam);
@@ -75,6 +78,7 @@ private:
     QThread thread;
     std::mutex *m_mutex;
     QTimer *timer;
+    bool isSingleShot = false;
 };
 
 #endif // WORKERFIT_H

@@ -114,7 +114,7 @@ void MyChart::copyFitData(double *fit_data, double *fit_param)
     std::scoped_lock lock(m_mutex_fit);
     memcpy(f_data, fit_data, sizeof(double) * N_fit);
     memcpy(f_param, fit_param, sizeof(double) * P);
-    emit receivedFit();
+    emit receivedFit(&m_mutex_fit, f_param);
 }
 
 /*!
@@ -123,7 +123,7 @@ void MyChart::copyFitData(double *fit_data, double *fit_param)
  * Private slot to proces the fit data (tranfor to QList)
  *  * 
  */
-void MyChart::processFitData()
+void MyChart::processFitData(std::mutex *mutex, double *params)
 {
     double x = 0.0;
     fit.clear();
@@ -131,7 +131,7 @@ void MyChart::processFitData()
         x = i / ((double) (N_fit - 1)) * (N - 1);
         fit.append(QPointF(x, f_data[i]));
     }
-    emit updateLabel(&m_mutex_fit, f_param);
+    drawFit();
 }
 
 /*!
@@ -245,18 +245,54 @@ void MyChart::setUpWorker()
         d_data = new double[N];
         f_param = new double[P];
         work_fit = new WorkerFit(N, P, N_fit, &m_mutex_fit);
-
-        dummy_data = new double[N];
         for (int i = 0; i < N; i++) {
-            dummy_data[i] = 0;
+            d_data[i] = 0;
         }
 
         // Connection
         myConnection();
 
-        // Start Fit ! ??
-        work_fit->startFitting(dummy_data);
         workerSet = true;
+    }
+}
+
+/*!
+ * \brief MyChart::stopFit
+ * 
+ * stop the fit loop
+ * 
+ */
+void MyChart::stopFit()
+{
+    if (workerSet) {
+        work_fit->stop();
+    }
+}
+
+/*!
+ * \brief MyChart::startSingleFit
+ * 
+ * launch fit for a single frame
+ * 
+ */
+void MyChart::startSingleFit()
+{
+    stopFit();
+    if (workerSet) {
+        work_fit->startsingle();
+    }
+}
+
+/*!
+ * \brief MyChart::startLoopFit
+ * 
+ * Start fitting loop
+ * 
+ */
+void MyChart::startLoopFit()
+{
+    if (workerSet) {
+        work_fit->startLoop(100);
     }
 }
 

@@ -129,7 +129,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     xcutDisplay->setSize(cam->getSensorWidth());
     xcutDisplay->setUpWorker();
     connect(xcutDisplay,
-            &MyChart::updateLabel,
+            &MyChart::receivedFit,
             this,
             &MainWindow::receivedLabelX,
             Qt::QueuedConnection);
@@ -139,7 +139,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     ycutDisplay->setSize(cam->getSensorHeigth());
     ycutDisplay->setUpWorker();
     connect(ycutDisplay,
-            &MyChart::updateLabel,
+            &MyChart::receivedFit,
             this,
             &MainWindow::receivedLabelY,
             Qt::QueuedConnection);
@@ -189,6 +189,8 @@ void MainWindow::slot_Start()
 {
     std::clog << "Start Clicked" << std::endl;
     cam->Start();
+    xcutDisplay->startLoopFit();
+    ycutDisplay->startLoopFit();
     bStart->setDisabled(true);
     isRunning = true;
 }
@@ -203,6 +205,8 @@ void MainWindow::slot_Stop()
 {
     std::clog << "Stop Clicked" << std::endl;
     cam->Stop();
+    xcutDisplay->stopFit();
+    ycutDisplay->stopFit();
     bStart->setDisabled(false);
     isRunning = false;
 }
@@ -218,6 +222,8 @@ void MainWindow::slot_SingleShot()
 {
     std::clog << "Single Shot Clicked" << std::endl;
     cam->SingleShot();
+    xcutDisplay->startSingleFit();
+    ycutDisplay->startSingleFit();
     bStart->setDisabled(false);
     isRunning = false;
 }

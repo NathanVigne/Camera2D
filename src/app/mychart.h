@@ -31,14 +31,17 @@ public:
     void setSize(size_t newN);
     void setUpWorker();
 
+    void stopFit();
+    void startSingleFit();
+    void startLoopFit();
+
 signals:
-    void receivedFit();
+    void receivedFit(std::mutex *mutex, double *params);
     void receivedData(double *datas);
-    void updateLabel(std::mutex *mutex, double *params);
 
 private slots:
     void copyFitData(double *fit_data, double *fit_param);
-    void processFitData();
+    void processFitData(std::mutex *mutex, double *params);
 
 private:
     void setUpChart();
@@ -74,7 +77,6 @@ private:
     // Data for fitting (faster in double)
     WorkerFit *work_fit;
     double *d_data;
-    double *dummy_data;
     double *f_data;
     double *f_param;
     std::mutex m_mutex_fit;

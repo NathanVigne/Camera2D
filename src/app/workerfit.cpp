@@ -10,6 +10,7 @@ WorkerFit::WorkerFit(
 {
     // Create timer for calling fitting periodically !
     timer = new QTimer();
+    connect(timer, &QTimer::timeout, this, &WorkerFit::Fitting);
 
     // Creates an instance of a Levenberg-Marquardt solver
     // for N data points and P parameters, using suggested defaults
@@ -32,7 +33,9 @@ WorkerFit::WorkerFit(
         m_xdata[i] = i;
     }
     m_ydata = new double[N];
-
+    for (int i = 0; i < n; ++i) {
+        m_ydata[i] = 0;
+    }
     // Allocate space for fit param
     param_guess = new double[P];
     m_fitParam = new double[P];
@@ -52,13 +55,6 @@ WorkerFit::~WorkerFit()
     delete[] m_fitParam;
 }
 
-void WorkerFit::startFitting(double *datas)
-{
-    connect(timer, &QTimer::timeout, this, &WorkerFit::Fitting);
-    setData(datas);
-    timer->start(100);
-}
-
 void WorkerFit::setMutex(std::mutex *newMutex)
 {
     m_mutex = newMutex;
@@ -72,14 +68,33 @@ int WorkerFit::setData(double *datas)
     d.t = m_xdata;
     d.y = m_ydata;
     fdf.params = &d;
-
+    
     return GSL_SUCCESS;
+}
+
+void WorkerFit::startLoop(int time_ms)
+{
+    timer->start(time_ms);
+}
+
+void WorkerFit::stop()
+{
+    timer->stop();
+}
+
+void WorkerFit::startsingle()
+{
+    isSingleShot = true;
 }
 
 void WorkerFit::copyData(double *datas)
 {
     std::scoped_lock lock(*m_mutex);
     memcpy(m_ydata, datas, (sizeof(double)) * n);
+    if (isSingleShot) {
+        Fitting();
+        isSingleShot = false;
+    }
 }
 
 void WorkerFit::Fitting()
@@ -254,7 +269,7 @@ int WorkerFit::expb_df(const gsl_vector *x, void *data, gsl_matrix *J)
     double A = gsl_vector_get(x, 0);
     double x0 = gsl_vector_get(x, 1);
     double w0 = gsl_vector_get(x, 2);
-    double b = gsl_vector_get(x, 3);
+    // double b = gsl_vector_get(x, 3);
 
     size_t i;
     for (i = 0; i < n; i++) {
