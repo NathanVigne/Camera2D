@@ -27,11 +27,15 @@ set(POJECT_RESSOURCES
     shaders.qrc
 )
 
+set(app_icon_resource_windows "iconres.rc")
+
+
 qt_add_executable(Camera2D
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
     ${PROJECT_HEADERS}
     ${POJECT_RESSOURCES}
+    ${app_icon_resource_windows}
 )
 
 target_link_libraries(Camera2D PRIVATE
