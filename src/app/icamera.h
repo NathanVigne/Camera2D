@@ -47,6 +47,8 @@ public:
     long long getMaxExposure() { return max_exposure; };
     int getSensorHeigth() { return sensorHeight_px; };
     int getSensorWidth() { return sensorWidth_px; };
+    double getPixelWidth() { return pixelWidth; };
+    double getPixelHeight() { return pixelHeight; };
     int getBitDepth() { return bit_depth; };
     BUFFTYPE getBuffType() { return buff_type; };
     void setWinHandle(HWND newWinHandle);

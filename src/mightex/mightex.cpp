@@ -47,7 +47,6 @@ void Mightex::Stop()
     isRunning = false;
 }
 
-//  TO DO test seems to bug when succesive push ?
 void Mightex::SingleShot()
 {
     if (isRunning) {
@@ -55,7 +54,7 @@ void Mightex::SingleShot()
     }
 
     // SetTrigger One frame
-    int result = MTUSB_StartFrameGrab(m_camHandle, 1);
+    int result = MTUSB_StartFrameGrab(m_camHandle, 0x1);
     if (result != 1) {
         std::cerr
             << "Mightex :: SingleShot :: Failed to Start (invalid camHandle) or engine not started"
@@ -70,7 +69,6 @@ void Mightex::SingleShot()
             << std::endl;
         return;
     }
-    isRunning = false;
 }
 
 void Mightex::SetExposure(const long long exposure_us)
@@ -231,12 +229,22 @@ void Mightex::Initialize()
 {
     // Start Cam engine
     int result = MTUSB_StartCameraEngine(NULL, m_camHandle);
+    if (result != 1) {
+        std::cerr << "Mightex :: Initialize :: (invalid camHandle) or engine not started"
+                  << std::endl;
+        return;
+    }
+    isEngineOn = true;
 
     // Load camSettings
     loadCamSettings();
 
+    // initialze for un-adujsted frame
+    // Not usefull for rawData
+    setUnAdjustedFrame();
+
     // Set all ICamera properties
-    min_gain = 0;
+    min_gain = 1;
     max_gain = 128 / 8;
     min_exposure = 0.05 * 1000;
     max_exposure = 750 * 1000;
@@ -289,10 +297,6 @@ void Mightex::Initialize()
     bit_depth = 8;
     buff_type = U8;
 
-    // initialze for un-adujsted frame
-    // Not usefull for rawData
-    setUnAdjustedFrame();
-
     // initialize buffer for the Frame callBack
     m_mem->allocateMem(sensorWidth_px, sensorHeight_px, buff_type);
 
@@ -344,15 +348,26 @@ void Mightex::setUnAdjustedFrame()
     camSettings.SharpLevel = 0;
     int result = MTUSB_SetGammaValue(m_camHandle, &camSettings);
     if (result != 1) {
-        std::cerr
-            << "Mightex :: setUnAdjustedFrame :: failed to set parameters (invalied cam handle)"
-            << std::endl;
+        std::cerr << "Mightex :: setUnAdjustedFrame :: failed to set Gamma parameters (invalied "
+                     "cam handle)"
+                  << std::endl;
+        return;
+    }
+
+    camSettings.BinMode = 1;
+    camSettings.Resolution = 6;
+    result = MTUSB_SetResolution(m_camHandle, &camSettings);
+    if (result != 1) {
+        std::cerr << "Mightex :: setUnAdjustedFrame :: failed to set Frame parameters (invalied "
+                     "cam handle)"
+                  << std::endl;
         return;
     }
 }
 
 // TO DO a lot of testing
-// Seems to not work (need to be in frameGrab ???)
+// Seems to not work (seems to need to be in frameGrab ???)
+// Maybe do cleanup and Re-Launch connect window !
 void Mightex::CameraUSBEventCallback(int fault_type)
 {
     switch (fault_type) {
@@ -374,7 +389,6 @@ void Mightex::CameraUSBEventCallback(int fault_type)
     }
 }
 
-// TO DO chack buffer size and layout error here !
 void Mightex::FrameAvailableCallback(
     int FrameType, int Row, int Col, TImageAttachData *Attributes, unsigned char *BytePtr)
 {

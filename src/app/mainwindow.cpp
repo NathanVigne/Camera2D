@@ -28,8 +28,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(bQuit, &QPushButton::clicked, this, &MainWindow::slot_Quit);
     connect(bResetZoom, &QPushButton::clicked, this, &MainWindow::slot_ResetZoom);
 
-    // Gain connection
+    // Gain & Zoom connection
     connect(dsbGain, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Gain);
+    connect(dsbGain, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Zoom);
 
     // Exposure connection
     connect(sliderExposure, &QSlider::valueChanged, this, &MainWindow::slot_Exposure);
@@ -72,7 +73,7 @@ MainWindow::~MainWindow()
  * And to get vector for 1D display
  * 
  * TO DO : move the 1D display to it's own thread or own
- * draw routine ??
+ * draw routine ?? (seems ok for now)
  * 
  */
 void MainWindow::callBackDraw()
@@ -84,10 +85,6 @@ void MainWindow::callBackDraw()
     // Move to a memory manager ?
     int x = mainDisplay->getCroix().x();
     int y = mainDisplay->getCroix().y();
-
-    std::clog << "Offset x : " << x << std::endl;
-    std::clog << "Offset y : " << y << std::endl;
-
     xcutDisplay->myUpdate(y, &m_mutexDisplay);
     ycutDisplay->myUpdate(x, &m_mutexDisplay);
 }
@@ -100,9 +97,6 @@ void MainWindow::callBackDraw()
  * Public slot called when we connect to a camera in the connect window.
  * 
  * This function also set the camera control for the specified camera
- * 
- * TO DO : refactor for more handling all camera TYPE
- * maybe in a generic way ?!
  * 
  */
 void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
@@ -171,8 +165,8 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     cam->SetExposure(cam->getMinExposure());
 
     // Show display
-    rbMonochrome->setChecked(true);
-    mainDisplay->setColorChoice(ColorChoice::MONO);
+    rbSatColor->setChecked(true);
+    mainDisplay->setColorChoice(ColorChoice::COLOR_SAT);
     mainDisplay->setTexHeigth(cam->getSensorHeigth());
     mainDisplay->setTexWidth(cam->getSensorWidth());
     this->show();
@@ -265,6 +259,18 @@ void MainWindow::slot_Quit()
 }
 
 /*!
+ * \brief MainWindow::slot_Zoom
+ * \param double newZoom
+ *
+ * Public slot called when the zoom spin box is changed. Update the internal variable zoom
+ *
+ */
+void MainWindow::slot_Zoom(double newZoom)
+{
+    zoom_ = newZoom;
+}
+
+/*!
  * \brief MainWindow::slot_ResetZoom
  * 
  * Public slot called whenthe reset zoom button is push. Call the reset zoom
@@ -299,17 +305,11 @@ void MainWindow::slot_Gain(double newGain)
  * Set the new exposure to the camera ! Also ask the camera what it's new 
  * exposure to display the value.
  * 
- * TO DO : Generic implement for all camera to not be reliant on CAMERATYPE !
- * 
  */
 void MainWindow::slot_Exposure(int newExposure)
 {
     float value;
-    //    if (cam_type == CAMERATYPE::THORLABS) {
     value = std::pow(10, float(newExposure) / 1000.0);
-    //    } else {
-    //        value = float(newExposure);
-    //    }
 
     cam->SetExposure((long long) value);
 
@@ -354,16 +354,16 @@ void MainWindow::slot_Color(bool check)
 void MainWindow::receivedLabelX(std::mutex *mutex, double *params)
 {
     std::scoped_lock lock(*mutex);
-    wx_d = (int) params[2];
-    wx_f = params[2]; // TODO Add pixel multiplication
+    wx_d = params[2];
+    wx_f = params[2] * cam->getPixelWidth() * zoom_; // TO DO Add zoom division !
     updateText();
 }
 
 void MainWindow::receivedLabelY(std::mutex *mutex, double *params)
 {
     std::scoped_lock lock(*mutex);
-    wy_d = (int) params[2];
-    wy_f = params[2]; // TODO Add pixel multiplication
+    wy_d = params[2];
+    wy_f = params[2] * cam->getPixelHeight() * zoom_;
     updateText();
 }
 
@@ -463,6 +463,10 @@ void MainWindow::uiSetUp()
     // Check Boxes + Pusbbuton
     cbCentrage = new QCheckBox("Automatic centering", this);
     cbEnergy = new QCheckBox("Circle 86.5 %", this);
+    dsbZoom = new QDoubleSpinBox(this);
+    dsbZoom->setValue(zoom_);
+    labelzoom = new QLabel("Zoom for Fit", this);
+    sZoom = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     bResetZoom = new QPushButton(this);
     bResetZoom->setText("Reset Zoom");
 
@@ -480,7 +484,10 @@ void MainWindow::uiSetUp()
 
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
-    lCheckBoxes->addWidget(cbEnergy);
+    lCheckBoxes->addItem(sZoom);
+    lCheckBoxes->addWidget(labelzoom);
+    lCheckBoxes->addWidget(dsbZoom);
+    lCheckBoxes->addItem(sZoom);
     lCheckBoxes->addWidget(bResetZoom);
     lSecondaryDisplay = new QVBoxLayout;
     lSecondaryDisplay->addLayout(lCheckBoxes);
@@ -605,7 +612,7 @@ void MainWindow::updateText()
 {
     char buffer[100];
     sprintf(buffer,
-            "\t\tX\t|\tY\nWaist (px) : \t %d \t|\t %d \nWaist (µm) : \t %f \t|\t %f",
+            "\t\tX\t|\tY\nWaist (px) : \t %.1f \t|\t %.1f \nWaist (µm) : \t %.1f \t|\t %.1f",
             wx_d,
             wy_d,
             wx_f,

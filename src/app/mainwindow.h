@@ -48,6 +48,7 @@ public slots:
     void slot_SingleShot();
     void slot_Export();
     void slot_Quit();
+    void slot_Zoom(double newZoom);
     void slot_ResetZoom();
 
     // Gain slot
@@ -80,11 +81,11 @@ private:
     CAMERATYPE cam_type;
     QMessageBox *msg;
 
-    int wx_d;
-    int wy_d;
+    double wx_d;
+    double wy_d;
     double wx_f;
     double wy_f;
-
+    double zoom_ = 1.0;
     // ----------------------------------------
     // Central widget
     // ----------------------------------------
@@ -103,6 +104,7 @@ private:
 
     // Layouts + spacer
     QSpacerItem *sButtons;
+    QSpacerItem *sZoom;
     QHBoxLayout *lButtons;
 
     // ----------------------------------------
@@ -122,6 +124,7 @@ private:
 
     // Labels
     QLabel *labelExposure;
+    QLabel *labelzoom;
 
     // Layouts
     QHBoxLayout *lControls;
@@ -146,6 +149,7 @@ private:
     // Check Boxes
     QCheckBox *cbCentrage;
     QCheckBox *cbEnergy;
+    QDoubleSpinBox *dsbZoom;
 
     // Label
     QLabel *labelInfo;

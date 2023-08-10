@@ -65,13 +65,13 @@ void GLDisplay::setTexture(void *buffer, std::mutex *mutex)
     switch (buff_type) {
     case U8:
         textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8, buffer);
-        std::clog << "GlDispay : Set Texture : test Value : "
-                  << static_cast<unsigned char *>(buffer)[400] << std::endl;
+        //        std::clog << "GlDispay : Set Texture : test Value : "
+        //                  << static_cast<unsigned char *>(buffer)[400] << std::endl;
         break;
     case U16:
         textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, buffer);
-        std::clog << "GlDispay : Set Texture : test Value : "
-                  << static_cast<unsigned short *>(buffer)[400] << std::endl;
+        //        std::clog << "GlDispay : Set Texture : test Value : "
+        //                  << static_cast<unsigned short *>(buffer)[400] << std::endl;
         break;
     case BUFF_END:
         break;
@@ -266,7 +266,7 @@ void GLDisplay::paintGL()
     program->setUniformValue("myTexture", 0);
     program->setUniformValue("colorChoice", colorChoice);
     program->setUniformValue("maxVal", maxVal);
-    std::clog << maxVal << std::endl;
+    //    std::clog << maxVal << std::endl;
 
     // Draw
     program->enableAttributeArray(PROGRAM_VERTEX_ATTRIBUTE);

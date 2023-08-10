@@ -91,20 +91,21 @@ void WorkerFit::copyData(double *datas)
 {
     std::scoped_lock lock(*m_mutex);
     memcpy(m_ydata, datas, (sizeof(double)) * n);
-    if (isSingleShot) {
-        Fitting();
-        isSingleShot = false;
-    }
+    //    if (isSingleShot) {
+    //        Fitting();
+    //        isSingleShot = false;
+    //    }
 }
 
 void WorkerFit::Fitting()
 {
-    std::clog << "Start Fit" << std::endl;
+    //    std::clog << "Start Fit" << std::endl;
     initialGuess();
 
-    std::clog << gsl_vector_get(&init_p.vector, 0) << " " << gsl_vector_get(&init_p.vector, 1)
-              << " " << gsl_vector_get(&init_p.vector, 2) << " "
-              << gsl_vector_get(&init_p.vector, 3) << std::endl;
+    std::clog << "A      = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
+    std::clog << "x0     = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
+    std::clog << "w0     = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
+    std::clog << "b      = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
 
     // initialize solver with starting point and weights
     gsl_multifit_nlinear_init(&init_p.vector, &fdf, w);
@@ -223,13 +224,13 @@ int WorkerFit::initialGuess()
     param_guess[0] = gsl_stats_max(m_ydata, 1, n);          // for param : A
     param_guess[3] = gsl_stats_min(m_ydata, 1, n);          // for param : b
     param_guess[1] = gsl_stats_wmean(yy, 1, m_xdata, 1, n); // get centroid
-    param_guess[2] = gsl_stats_wsd_with_fixed_mean(yy,
-                                                   1,
-                                                   m_xdata,
-                                                   1,
-                                                   n,
-                                                   x0)
-                     * sqrt(2.0); // bad waist approx!
+    param_guess[2] = std::abs(gsl_stats_wsd_with_fixed_mean(yy,
+                                                            1,
+                                                            m_xdata,
+                                                            1,
+                                                            n,
+                                                            x0)
+                              * sqrt(2.0)); // bad waist approx!
 
     init_p = gsl_vector_view_array(param_guess, p);
 
