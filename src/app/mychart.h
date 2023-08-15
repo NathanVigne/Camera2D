@@ -9,7 +9,6 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QValueAxis>
 #include "memorymanager.h"
-#include "workerfit.h"
 
 class MyChart : public QWidget
 {
@@ -21,31 +20,29 @@ public:
                      QWidget *parent = nullptr);
     ~MyChart();
 
-    void setMaxY(int newMaxY);
-    void myUpdate(int &mem_offset, std::mutex *mutex_);
-    void setMem(MemoryManager *newMem);
-
+    double *getD_data() const;
+    std::mutex *mutex_fit();
     QList<QPointF> *getDataList();
     double getFitParam(int id);
 
     void setSize(size_t newN);
-    void setUpWorker();
+    void setMem(MemoryManager *newMem);
+    void setMaxY(int newMaxY);
 
-    void stopFit();
-    void startSingleFit();
-    void startLoopFit();
+    void myUpdate(int &mem_offset, std::mutex *mutex_);
 
 signals:
     void receivedFit(std::mutex *mutex, double *params);
     void receivedData(double *datas);
 
+public slots:
+    void copyFitData(double *fit_data, double *fit_param, std::mutex *mutex);
+
 private slots:
-    void copyFitData(double *fit_data, double *fit_param);
     void processFitData(std::mutex *mutex, double *params);
 
 private:
     void setUpChart();
-    void myConnection();
     void getDatas(int &offset, std::mutex *mutex_);
     void drawData();
     void drawFit();
@@ -75,12 +72,10 @@ private:
     QList<QPointF> fit;
 
     // Data for fitting (faster in double)
-    WorkerFit *work_fit;
     double *d_data;
     double *f_data;
     double *f_param;
     std::mutex m_mutex_fit;
-    bool workerSet = false;
 };
 
 #endif // MYCHART_H

@@ -1,8 +1,9 @@
-#ifndef WORKERFIT_H
-#define WORKERFIT_H
+#ifndef FIT_H
+#define FIT_H
 
 #include <QThread>
 #include <QTimer>
+#include "mychart.h"
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multifit_nlinear.h>
@@ -13,42 +14,46 @@
 #include <iostream>
 #include <mutex>
 
-//struct data
-//{
-//    size_t n;
-//    double *t;
-//    double *y;
-//};
+struct data
+{
+    size_t n;
+    double *t;
+    double *y;
+};
 
-class WorkerFit : public QObject
+class Fit : public QObject
 {
     Q_OBJECT;
 
 public:
-    WorkerFit(const size_t N,
-              const int P,
-              const size_t N_fit,
-              std::mutex *mutex,
-              QObject *parent = nullptr);
-    ~WorkerFit();
+    Fit(const size_t N,
+        const int P,
+        const size_t N_fit,
+        const int axe,
+        MyChart *chart,
+        QObject *parent = nullptr);
+    ~Fit();
 
+    // initialisation function (setter)
     void setMutex(std::mutex *newMutex);
-    int setData(double *datas);
+    void setChart(MyChart *newChart);
 
+    // controlling the fit
     void startLoop(int time_ms);
     void stop();
     void startsingle();
+    void offsetUpdate(int &newOffset);
 
 signals:
-    void fitEND(double *fitDatas, double *fitParam);
+    void fitEND(double *fitDatas, double *fitParam, std::mutex *mutex);
 
 private slots:
-    void copyData(double *datas);
+    void getDatas();
 
 private:
+    int initialGuess();
     void Fitting();
     void calcFitDatas();
-    int initialGuess();
 
     static int expb_f(const gsl_vector *x, void *data, gsl_vector *f);
     static int expb_df(const gsl_vector *x, void *data, gsl_matrix *f);
@@ -61,8 +66,8 @@ private:
     const size_t n;
     const size_t n_fit;
     const size_t p;
-    double *m_ydata;
-    double *m_xdata;
+    double *m_vdata;
+    double *m_wdata;
     double *m_fitData;
     double *m_fitParam;
     data d;
@@ -76,9 +81,11 @@ private:
     size_t i;
 
     QThread thread;
-    std::mutex *m_mutex;
+    std::mutex m_mutex;
     QTimer *timer;
-    bool isSingleShot = false;
+    MyChart *m_chart;
+    const int axe_XY;
+    int offset = 0;
 };
 
-#endif // WORKERFIT_H
+#endif // FIT_H

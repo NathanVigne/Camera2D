@@ -62,6 +62,7 @@ ConnectWindow::~ConnectWindow()
 void ConnectWindow::refresh()
 {
     slot_refrechClicked();
+    std::clog << "ConnecWindow :: Refresh. Thread : " << QThread::currentThreadId() << std::endl;
 }
 
 /*!

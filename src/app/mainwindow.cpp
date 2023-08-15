@@ -19,7 +19,6 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1200, 600);
 
     // Connect Slot to cam !
-    // TO DO caonnection with Color and chack boxes !
     // PushButtons connection
     connect(bStart, &QPushButton::clicked, this, &MainWindow::slot_Start);
     connect(bStop, &QPushButton::clicked, this, &MainWindow::slot_Stop);
@@ -30,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Gain & Zoom connection
     connect(dsbGain, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Gain);
-    connect(dsbGain, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Zoom);
+    connect(dsbZoom, &QDoubleSpinBox::valueChanged, this, &MainWindow::slot_Zoom);
 
     // Exposure connection
     connect(sliderExposure, &QSlider::valueChanged, this, &MainWindow::slot_Exposure);
@@ -51,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             &MainWindow::displayReConnect,
             Qt::QueuedConnection);
+
+    std::clog << "MainWindow :: Constructor. Thread : " << QThread::currentThreadId() << std::endl;
 }
 
 /*!
@@ -61,8 +62,8 @@ MainWindow::MainWindow(QWidget *parent)
  */
 MainWindow::~MainWindow()
 {
-    std::clog << "Destroy MainWindow " << std::endl;
     delete mem; // for safety since all buffer are manage here
+    std::clog << "Destroy MainWindow " << std::endl;
 }
 
 /*!
@@ -87,6 +88,10 @@ void MainWindow::callBackDraw()
     int y = mainDisplay->getCroix().y();
     xcutDisplay->myUpdate(y, &m_mutexDisplay);
     ycutDisplay->myUpdate(x, &m_mutexDisplay);
+
+    // TO DO : with new fit
+    // xFit->offsetUpdate(x);
+    // yFit->offsetUpdate(y);
 }
 
 /*!
@@ -103,7 +108,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
 {
     // get came handle and type
     cam = camera;
-    std::clog << "ICamera pointer : " << cam << std::endl;
+    std::clog << "MainWindow :: CameraOpen. Thread : " << QThread::currentThreadId() << std::endl;
     cam_type = type;
 
     // set up & initiialize cam
@@ -121,22 +126,26 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     xcutDisplay->setMaxY(pow(2, cam->getBitDepth()));
     xcutDisplay->setMem(mem);
     xcutDisplay->setSize(cam->getSensorWidth());
-    xcutDisplay->setUpWorker();
     connect(xcutDisplay,
             &MyChart::receivedFit,
             this,
             &MainWindow::receivedLabelX,
             Qt::QueuedConnection);
 
+    xFit = new Fit(cam->getSensorWidth(), 4, 201, 0, xcutDisplay);
+    connect(xFit, &Fit::fitEND, xcutDisplay, &MyChart::copyFitData, Qt::QueuedConnection);
+
     ycutDisplay->setMaxY(pow(2, cam->getBitDepth()));
     ycutDisplay->setMem(mem);
     ycutDisplay->setSize(cam->getSensorHeigth());
-    ycutDisplay->setUpWorker();
     connect(ycutDisplay,
             &MyChart::receivedFit,
             this,
             &MainWindow::receivedLabelY,
             Qt::QueuedConnection);
+
+    yFit = new Fit(cam->getSensorWidth(), 4, 201, 1, ycutDisplay);
+    connect(yFit, &Fit::fitEND, ycutDisplay, &MyChart::copyFitData, Qt::QueuedConnection);
 
     // Inittialize UI and cam controls
     mainDisplay->setBit_depth(cam->getBitDepth());
@@ -181,10 +190,10 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
  */
 void MainWindow::slot_Start()
 {
-    std::clog << "Start Clicked" << std::endl;
+    std::clog << "MW : Start Clicked" << std::endl;
     cam->Start();
-    xcutDisplay->startLoopFit();
-    ycutDisplay->startLoopFit();
+    xFit->startLoop(100);
+    yFit->startLoop(100);
     bStart->setDisabled(true);
     isRunning = true;
 }
@@ -197,10 +206,10 @@ void MainWindow::slot_Start()
  */
 void MainWindow::slot_Stop()
 {
-    std::clog << "Stop Clicked" << std::endl;
+    std::clog << "MW : Stop Clicked" << std::endl;
     cam->Stop();
-    xcutDisplay->stopFit();
-    ycutDisplay->stopFit();
+    xFit->stop();
+    yFit->stop();
     bStart->setDisabled(false);
     isRunning = false;
 }
@@ -214,10 +223,10 @@ void MainWindow::slot_Stop()
  */
 void MainWindow::slot_SingleShot()
 {
-    std::clog << "Single Shot Clicked" << std::endl;
+    std::clog << "MW : Single Shot Clicked" << std::endl;
+    xFit->startsingle();
+    yFit->startsingle();
     cam->SingleShot();
-    xcutDisplay->startSingleFit();
-    ycutDisplay->startSingleFit();
     bStart->setDisabled(false);
     isRunning = false;
 }
@@ -230,7 +239,7 @@ void MainWindow::slot_SingleShot()
  */
 void MainWindow::slot_Export()
 {
-    std::clog << "Export Clicked" << std::endl;
+    std::clog << "MW : Export Clicked" << std::endl;
     exportWindow *exW = new exportWindow;
     exW->setButtonExport(bExport);
     exW->setIsRunning(isRunning);
@@ -254,7 +263,7 @@ void MainWindow::slot_Export()
  */
 void MainWindow::slot_Quit()
 {
-    std::clog << "Quit Clicked" << std::endl;
+    std::clog << "MW : Quit Clicked" << std::endl;
     close();
 }
 
@@ -279,7 +288,7 @@ void MainWindow::slot_Zoom(double newZoom)
  */
 void MainWindow::slot_ResetZoom()
 {
-    std::clog << "ResetZoom Clicked" << std::endl;
+    std::clog << "MW : ResetZoom Clicked" << std::endl;
     mainDisplay->resetZoom();
 }
 
@@ -293,7 +302,7 @@ void MainWindow::slot_ResetZoom()
  */
 void MainWindow::slot_Gain(double newGain)
 {
-    std::clog << "New Gain : " << newGain << std::endl;
+    //std::clog << "New Gain : " << newGain << std::endl;
     cam->SetGain(newGain);
 }
 
@@ -313,9 +322,9 @@ void MainWindow::slot_Exposure(int newExposure)
 
     cam->SetExposure((long long) value);
 
-    std::clog << "New Exposure : " << value << std::endl;
+    //std::clog << "New Exposure : " << value << std::endl;
     long long camVal = cam->GetExposure();
-    std::clog << "New Exposure : " << value << "Cam Exposure : " << camVal << std::endl;
+    //std::clog << "New Exposure : " << value << "Cam Exposure : " << camVal << std::endl;
 
     QString str = QStringLiteral("%1 ms").arg((float) camVal / 1000.0);
     labelExposure->setText(str);
@@ -331,13 +340,13 @@ void MainWindow::slot_Exposure(int newExposure)
 void MainWindow::slot_Color(bool check)
 {
     if (rbMonochrome->isChecked()) {
-        std::clog << "ColorMonochrome" << std::endl;
+        std::clog << "MW : ColorMonochrome" << std::endl;
         mainDisplay->setColorChoice(ColorChoice::MONO);
     } else if (rbSatMonochrome->isChecked()) {
-        std::clog << "ColorMonochrome Sat" << std::endl;
+        std::clog << "MW ! ColorMonochrome Sat" << std::endl;
         mainDisplay->setColorChoice(ColorChoice::MONO_SAT);
     } else if (rbSatColor->isChecked()) {
-        std::clog << "Color Color" << std::endl;
+        std::clog << "MW : Color Color" << std::endl;
         mainDisplay->setColorChoice(ColorChoice::COLOR_SAT);
     }
 }
@@ -355,7 +364,7 @@ void MainWindow::receivedLabelX(std::mutex *mutex, double *params)
 {
     std::scoped_lock lock(*mutex);
     wx_d = params[2];
-    wx_f = params[2] * cam->getPixelWidth() * zoom_; // TO DO Add zoom division !
+    wx_f = params[2] * cam->getPixelWidth() / zoom_;
     updateText();
 }
 
@@ -363,7 +372,7 @@ void MainWindow::receivedLabelY(std::mutex *mutex, double *params)
 {
     std::scoped_lock lock(*mutex);
     wy_d = params[2];
-    wy_f = params[2] * cam->getPixelHeight() * zoom_;
+    wy_f = params[2] * cam->getPixelHeight() / zoom_;
     updateText();
 }
 
@@ -464,6 +473,8 @@ void MainWindow::uiSetUp()
     cbCentrage = new QCheckBox("Automatic centering", this);
     cbEnergy = new QCheckBox("Circle 86.5 %", this);
     dsbZoom = new QDoubleSpinBox(this);
+    dsbZoom->setRange(0, 1000);
+    dsbZoom->setSingleStep(0.5);
     dsbZoom->setValue(zoom_);
     labelzoom = new QLabel("Zoom for Fit", this);
     sZoom = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);

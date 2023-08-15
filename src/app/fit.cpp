@@ -1,16 +1,17 @@
-#include "workerfit.h"
+#include "fit.h"
 
-WorkerFit::WorkerFit(
-    const size_t N, const int P, const size_t N_fit, std::mutex *mutex, QObject *parent)
+Fit::Fit(
+    const size_t N, const int P, const size_t N_fit, const int axe, MyChart *chart, QObject *parent)
     : n(N)
     , p(P)
     , n_fit(N_fit)
-    , m_mutex(mutex)
+    , axe_XY(axe)
+    , m_chart(chart)
     , QObject(parent)
 {
     // Create timer for calling fitting periodically !
     timer = new QTimer();
-    connect(timer, &QTimer::timeout, this, &WorkerFit::Fitting);
+    connect(timer, &QTimer::timeout, this, &Fit::Fitting);
 
     // Creates an instance of a Levenberg-Marquardt solver
     // for N data points and P parameters, using suggested defaults
@@ -21,20 +22,20 @@ WorkerFit::WorkerFit(
     w = gsl_multifit_nlinear_alloc(T, &params, n, p);
 
     // Define the function to minimize
-    fdf.f = &WorkerFit::expb_f;
-    fdf.df = &WorkerFit::expb_df; //&worker::expb_df; //set to NULL for finite-difference Jacobian
-    fdf.fvv = NULL; // not using geodesic acceleration
+    fdf.f = &Fit::expb_f;
+    fdf.df = &Fit::expb_df; //&worker::expb_df; //set to NULL for finite-difference Jacobian
+    fdf.fvv = NULL;         // not using geodesic acceleration
     fdf.n = n;
     fdf.p = p;
 
     // Allocate space for data
-    m_xdata = new double[N];
+    m_vdata = new double[N];
     for (int i = 0; i < n; ++i) {
-        m_xdata[i] = i;
+        m_vdata[i] = i;
     }
-    m_ydata = new double[N];
+    m_wdata = new double[N];
     for (int i = 0; i < n; ++i) {
-        m_ydata[i] = 0;
+        m_wdata[i] = 0;
     }
     // Allocate space for fit param
     param_guess = new double[P];
@@ -44,69 +45,71 @@ WorkerFit::WorkerFit(
     // Move this object to a new thread !
     moveToThread(&thread);
     thread.start();
+    std::clog << "Fit :: Constructor. Thread : " << QThread::currentThreadId() << std::endl;
 }
 
-WorkerFit::~WorkerFit()
+Fit::~Fit()
 {
     gsl_multifit_nlinear_free(w);
-    delete[] m_xdata;
-    delete[] m_ydata;
+    delete[] m_vdata;
+    delete[] m_wdata;
     delete[] m_fitData;
     delete[] m_fitParam;
+    std::clog << "Fit :: Destructor. Thread : " << std::endl;
 }
 
-void WorkerFit::setMutex(std::mutex *newMutex)
+void Fit::setMutex(std::mutex *newMutex)
 {
-    m_mutex = newMutex;
+    //m_mutex = newMutex;
 }
 
-int WorkerFit::setData(double *datas)
+void Fit::setChart(MyChart *newChart)
 {
-    copyData(datas);
-
-    d.n = n;
-    d.t = m_xdata;
-    d.y = m_ydata;
-    fdf.params = &d;
-    
-    return GSL_SUCCESS;
+    m_chart = newChart;
 }
 
-void WorkerFit::startLoop(int time_ms)
+void Fit::startLoop(int time_ms)
 {
     timer->start(time_ms);
 }
 
-void WorkerFit::stop()
+void Fit::stop()
 {
     timer->stop();
 }
 
-void WorkerFit::startsingle()
+// A revoir la fonction a appeler
+void Fit::startsingle()
 {
     timer->stop();
-    isSingleShot = true;
+    timer->singleShot(100, this, &Fit::Fitting);
 }
 
-void WorkerFit::copyData(double *datas)
+void Fit::getDatas()
 {
-    std::scoped_lock lock(*m_mutex);
-    memcpy(m_ydata, datas, (sizeof(double)) * n);
-    if (isSingleShot) {
-        Fitting();
-        isSingleShot = false;
-    }
+    std::scoped_lock lock(*m_chart->mutex_fit(), m_mutex);
+    memcpy(m_wdata, m_chart->getD_data(), sizeof(double) * n);
+
+    d.n = n;
+    d.t = m_vdata;
+    d.y = m_wdata;
+    fdf.params = &d;
 }
 
-void WorkerFit::Fitting()
+void Fit::Fitting()
 {
     //    std::clog << "Start Fit" << std::endl;
+
+    getDatas();
+
     initialGuess();
 
-    std::clog << "A      = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
-    std::clog << "x0     = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
-    std::clog << "w0     = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
-    std::clog << "b      = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
+    /*
+    std::clog << "A      = " << gsl_vector_get(&init_p.vector, 0) << "\n"
+              << "x0     = " << gsl_vector_get(&init_p.vector, 0) << "\n"
+              << "w0     = " << gsl_vector_get(&init_p.vector, 0) << "\n"
+              << "b      = " << gsl_vector_get(&init_p.vector, 0) << std::endl;
+    */
 
     // initialize solver with starting point and weights
     gsl_multifit_nlinear_init(&init_p.vector, &fdf, w);
@@ -178,15 +181,12 @@ void WorkerFit::Fitting()
     std::clog << "status = " << gsl_strerror(status) << std::endl;
 */
 
-    emit fitEND(m_fitData, m_fitParam);
+    emit fitEND(m_fitData, m_fitParam, &m_mutex);
 }
 
-void WorkerFit::calcFitDatas()
+void Fit::calcFitDatas()
 {
-    std::scoped_lock lock(*m_mutex);
-
     // get params
-
     double A = gsl_vector_get(w->x, 0);
     double x0 = gsl_vector_get(w->x, 1);
     double w0 = abs(gsl_vector_get(w->x, 2));
@@ -204,14 +204,16 @@ void WorkerFit::calcFitDatas()
     }
 }
 
-int WorkerFit::initialGuess()
+// TO DO
+// A debugger pour les start nan / inf
+int Fit::initialGuess()
 {
     // compute the background noise from image edge
     // 5% of width on each side
     double bck = 0.0;
     double N = 0.0;
     for (int i = 0; i < (n / 20); ++i) {
-        bck += m_ydata[i] + m_ydata[n - i];
+        bck += m_wdata[i] + m_wdata[n - i];
         N = N + 2;
     }
     bck = bck / N;
@@ -219,15 +221,15 @@ int WorkerFit::initialGuess()
     // get new vector;
     double yy[n];
     for (int i = 0; i < n; ++i) {
-        yy[i] = m_ydata[i] - bck;
+        yy[i] = m_wdata[i] - bck;
     }
 
-    param_guess[0] = gsl_stats_max(m_ydata, 1, n);          // for param : A
-    param_guess[3] = gsl_stats_min(m_ydata, 1, n);          // for param : b
-    param_guess[1] = gsl_stats_wmean(yy, 1, m_xdata, 1, n); // get centroid
+    param_guess[0] = gsl_stats_max(m_wdata, 1, n);          // for param : A
+    param_guess[3] = gsl_stats_min(m_wdata, 1, n);          // for param : b
+    param_guess[1] = gsl_stats_wmean(yy, 1, m_vdata, 1, n); // get centroid
     param_guess[2] = std::abs(gsl_stats_wsd_with_fixed_mean(yy,
                                                             1,
-                                                            m_xdata,
+                                                            m_vdata,
                                                             1,
                                                             n,
                                                             x0)
@@ -238,7 +240,7 @@ int WorkerFit::initialGuess()
     return GSL_SUCCESS;
 }
 
-int WorkerFit::expb_f(const gsl_vector *x, void *data, gsl_vector *f)
+int Fit::expb_f(const gsl_vector *x, void *data, gsl_vector *f)
 {
     size_t n = ((struct data *) data)->n;
     double *t = ((struct data *) data)->t;
@@ -262,8 +264,7 @@ int WorkerFit::expb_f(const gsl_vector *x, void *data, gsl_vector *f)
     return GSL_SUCCESS;
 }
 
-// TO DO
-int WorkerFit::expb_df(const gsl_vector *x, void *data, gsl_matrix *J)
+int Fit::expb_df(const gsl_vector *x, void *data, gsl_matrix *J)
 {
     size_t n = ((struct data *) data)->n;
     double *t = ((struct data *) data)->t;

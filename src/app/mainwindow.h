@@ -16,6 +16,7 @@
 #include <QSpacerItem>
 #include "cameramanager.h"
 #include "exportwindow.h"
+#include "fit.h"
 #include "gldisplay.h"
 #include "icamera.h"
 #include "memorymanager.h"
@@ -141,7 +142,9 @@ private:
     // secondary display
     // ----------------------------------------
     MyChart *xcutDisplay;
+    Fit *xFit;
     MyChart *ycutDisplay;
+    Fit *yFit;
 
     // Group Boxes
     QGroupBox *gbSecondaryDisplay;

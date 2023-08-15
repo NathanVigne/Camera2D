@@ -1,4 +1,5 @@
 #include "memorymanager.h"
+#include "QThread"
 
 /*!
  * \brief MemoryManager::MemoryManager
@@ -13,6 +14,8 @@ MemoryManager::MemoryManager(std::mutex *mutexSave, std::mutex *mutexDisplay)
 {
     Smutex_ = mutexSave;
     Dmutex_ = mutexDisplay;
+    std::clog << "MemoryManager :: Constructor. Thread : " << QThread::currentThreadId()
+              << std::endl;
 }
 
 /*!
@@ -34,6 +37,7 @@ MemoryManager::~MemoryManager()
     case BUFF_END:
         break;
     }
+    std::clog << "MemoryManager :: Destructor" << std::endl;
 }
 
 /*!
@@ -119,6 +123,30 @@ int MemoryManager::getWidth() const
 int MemoryManager::getHeight() const
 {
     return height_;
+}
+
+/*!
+ * \brief MemoryManager::Smutex
+ * \return std::mutex
+ * 
+ * Getter for the save mutex
+ * 
+ */
+std::mutex *MemoryManager::Smutex() const
+{
+    return Smutex_;
+}
+
+/*!
+ * \brief MemoryManager::Dmutex
+ * \return std::mutex
+ * 
+ * Getter for the display mutex
+ * 
+ */
+std::mutex *MemoryManager::Dmutex() const
+{
+    return Dmutex_;
 }
 
 /*!

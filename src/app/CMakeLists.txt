@@ -7,7 +7,8 @@ set(PROJECT_SOURCES
     exportwindow.cpp
     mychart.cpp
     memorymanager.cpp
-    workerfit.cpp
+    #workerfit.cpp
+    fit.cpp
 )
 
 set(PROJECT_HEADERS
@@ -19,7 +20,8 @@ set(PROJECT_HEADERS
     exportwindow.h
     mychart.h
     memorymanager.h
-    workerfit.h
+    #workerfit.h
+    fit.h
 )
 
 set(POJECT_RESSOURCES

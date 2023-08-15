@@ -1,5 +1,5 @@
 #include "gldisplay.h"
-
+#include "QThread"
 #include <random>
 
 #define PROGRAM_VERTEX_ATTRIBUTE 0
@@ -33,6 +33,7 @@ GLDisplay::~GLDisplay()
     case BUFF_END:
         break;
     }
+    std::clog << "GLDisplay :: Destructor" << std::endl;
 }
 
 /*!
@@ -304,11 +305,9 @@ void GLDisplay::resizeGL(int width, int height)
     if (w_aspect > t_aspect) {
         // Set othro projection
         projection.ortho(-1 * w_aspect / t_aspect, 1 * w_aspect / t_aspect, -1, 1, -1, 1);
-        std::clog << "W > H" << std::endl;
     } else {
         // Set othro projection
         projection.ortho(-1, 1, -1 * t_aspect / w_aspect, 1 * t_aspect / w_aspect, -1, 1);
-        std::clog << "H > W" << std::endl;
     }
 }
 

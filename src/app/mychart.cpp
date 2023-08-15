@@ -1,7 +1,7 @@
 #include "mychart.h"
 #include <QtCharts/QValueAxis>
+#include "QThread"
 #include "qgraphicslayout.h"
-
 /*!
  * \brief MyChart::MyChart
  * \param QWidget *parent
@@ -23,9 +23,14 @@ MyChart::MyChart(const int _axe_XY, QColor pen_Color, int bitDepth, QWidget *par
     // Initialize params
     maxY = int(pow(2, bitDepth)) - 1;
     f_data = new double[N_fit];
+    f_param = new double[P];
 
     // Create chart
     setUpChart();
+
+    connect(this, &MyChart::receivedFit, this, &MyChart::processFitData);
+
+    std::clog << "MyChart :: Constructor. Thread : " << QThread::currentThreadId() << std::endl;
 }
 
 /*!
@@ -34,47 +39,33 @@ MyChart::MyChart(const int _axe_XY, QColor pen_Color, int bitDepth, QWidget *par
  * Destructor
  * 
  */
-MyChart::~MyChart() {}
-
-/*!
- * \brief MyChart::addDataPoint
- * \param int offset
- * 
- * Add data to the courbeData scatters serie
- * 
- * update the x-axis by taking into account the xoffset
- * 
- */
-void MyChart::drawData()
+MyChart::~MyChart()
 {
-    m_serieData->replace(data);
+    std::clog << "MyChart :: destructor." << std::endl;
 }
 
 /*!
- * \brief MyChart::addFitPoint
- * \param offset
+ * \brief MyChart::getD_data
+ * \return double *
  * 
- * Add data to the courbefir lineserie
- * 
- * TO DO : compute fit
+ * Getteer for the pointer of the data
  * 
  */
-void MyChart::drawFit()
+double *MyChart::getD_data() const
 {
-    m_serieFit->replace(fit);
+    return d_data;
 }
 
 /*!
- * \brief MyChart::setSize
- * \param newN
+ * \brief MyChart::mutex_fit
+ * \return std::mutex *
  * 
- * Setter for the size of the cut
+ * Getter for the fit mutex
  * 
  */
-void MyChart::setSize(size_t newN)
+std::mutex *MyChart::mutex_fit()
 {
-    N = newN;
-    axisX->setRange(0, N - 1);
+    return &m_mutex_fit;
 }
 
 /*!
@@ -100,6 +91,63 @@ double MyChart::getFitParam(int id)
 }
 
 /*!
+ * \brief MyChart::setSize
+ * \param newN
+ * 
+ * Setter for the size of the cut
+ * 
+ */
+void MyChart::setSize(size_t newN)
+{
+    N = newN;
+    d_data = new double[N];
+    axisX->setRange(0, N - 1);
+}
+
+/*!
+ * \brief MyChart::setMem
+ * \param newMem
+ * 
+ * setter for the memory manager to use
+ * 
+ */
+void MyChart::setMem(MemoryManager *newMem)
+{
+    m_mem = newMem;
+}
+
+/*!
+ * \brief MyChart::setMaxY
+ * \param int newMaxY
+ * 
+ * update the maxY value
+ * 
+ */
+void MyChart::setMaxY(int newMaxY)
+{
+    maxY = newMaxY;
+    axisY->setRange(0, maxY);
+}
+
+/*!
+ * \brief MyChart::myUpdate
+ * \param int &offset
+ * \param int &axe_offset
+ * \param std::mutex *mutex_
+ * 
+ * Update the graphe
+ * 
+ * Laod data using the memory manager + display on chart
+ * 
+ */
+void MyChart::myUpdate(int &mem_offset, std::mutex *mutex_)
+{
+    getDatas(mem_offset, mutex_);
+    drawData();
+    drawFit();
+}
+
+/*!
  * \brief MyChart::copyFitData
  * \param fit_params
  * 
@@ -107,12 +155,11 @@ double MyChart::getFitParam(int id)
  * the fit datas, emit a signal for transforming to QList
  * then draw !
  * 
- * TO DO in the worker class into a different thread ?
- * 
  */
-void MyChart::copyFitData(double *fit_data, double *fit_param)
+void MyChart::copyFitData(double *fit_data, double *fit_param, std::mutex *mutex)
 {
-    std::scoped_lock lock(m_mutex_fit);
+    std::scoped_lock lock(m_mutex_fit, *mutex); // obsolete ?
+    std::clog << "Mychart :: copyFitData" << std::endl;
     memcpy(f_data, fit_data, sizeof(double) * N_fit);
     memcpy(f_param, fit_param, sizeof(double) * P);
     emit receivedFit(&m_mutex_fit, f_param);
@@ -133,18 +180,7 @@ void MyChart::processFitData(std::mutex *mutex, double *params)
         fit.append(QPointF(x, f_data[i]));
     }
     drawFit();
-}
-
-/*!
- * \brief MyChart::setMem
- * \param newMem
- * 
- * setter for the memory manager to use
- * 
- */
-void MyChart::setMem(MemoryManager *newMem)
-{
-    m_mem = newMem;
+    std::clog << "Mychart :: processFitDataa" << std::endl;
 }
 
 /*!
@@ -234,88 +270,6 @@ void MyChart::setUpChart()
 }
 
 /*!
- * \brief MyChart::setUpWorker
- * 
- * function to create the worker !
- * 
- * 
- */
-void MyChart::setUpWorker()
-{
-    if (!workerSet) {
-        d_data = new double[N];
-        f_param = new double[P];
-        work_fit = new WorkerFit(N, P, N_fit, &m_mutex_fit);
-        for (int i = 0; i < N; i++) {
-            d_data[i] = 0;
-        }
-
-        // Connection
-        myConnection();
-
-        workerSet = true;
-    }
-}
-
-/*!
- * \brief MyChart::stopFit
- * 
- * stop the fit loop
- * 
- */
-void MyChart::stopFit()
-{
-    if (workerSet) {
-        work_fit->stop();
-    }
-}
-
-/*!
- * \brief MyChart::startSingleFit
- * 
- * launch fit for a single frame
- * 
- */
-void MyChart::startSingleFit()
-{
-    stopFit();
-    if (workerSet) {
-        work_fit->startsingle();
-    }
-}
-
-/*!
- * \brief MyChart::startLoopFit
- * 
- * Start fitting loop
- * 
- */
-void MyChart::startLoopFit()
-{
-    if (workerSet) {
-        work_fit->startLoop(100);
-    }
-}
-
-/*!
- * \brief MyChart::connect
- * 
- * Set up all connection between worker and chart
- * 
- */
-void MyChart::myConnection()
-{
-    // connect end of copy fit to process fit
-    connect(this, &MyChart::receivedFit, this, &MyChart::processFitData);
-
-    // Connect seriesCahnge (whan new data arrived) to setData of the worker
-    connect(this, &MyChart::receivedData, work_fit, &WorkerFit::setData, Qt::QueuedConnection);
-
-    // Connect end fit to copy dataFit
-    connect(work_fit, &WorkerFit::fitEND, this, &MyChart::copyFitData, Qt::QueuedConnection);
-}
-
-/*!
  * \brief MyChart::getDatas
  * \param int &offset
  * \param int &axe_offset
@@ -324,9 +278,6 @@ void MyChart::myConnection()
  * Load data from the display buffer onto the QList<QPointF> private property
  * for quick display and onto the double array for quick copying into the 
  * the workerFit
- * 
- * TO DO on other thread ??? maybe not since double buffer prevent a lot
- * of memory conflict !
  * 
  */
 void MyChart::getDatas(int &offset, std::mutex *mutex_)
@@ -379,39 +330,33 @@ void MyChart::getDatas(int &offset, std::mutex *mutex_)
             d_data[i] = (double) y;
         }
     }
-
-    emit receivedData(d_data);
 }
 
 /*!
- * \brief MyChart::setMaxY
- * \param int newMaxY
+ * \brief MyChart::addDataPoint
+ * \param int offset
  * 
- * update the maxY value
+ * Add data to the courbeData scatters serie
+ * 
+ * update the x-axis by taking into account the xoffset
  * 
  */
-void MyChart::setMaxY(int newMaxY)
+void MyChart::drawData()
 {
-    maxY = newMaxY;
-    axisY->setRange(0, maxY);
+    m_serieData->replace(data);
 }
 
 /*!
- * \brief MyChart::myUpdate
- * \param int &offset
- * \param int &axe_offset
- * \param std::mutex *mutex_
+ * \brief MyChart::addFitPoint
+ * \param offset
  * 
- * Update the graphe
+ * Add data to the courbefir lineserie
  * 
- * Laod data using the memory manager + display on chart
- * 
- * emit signal to compute fit / start fit ??!
+ * TO DO : compute fit
  * 
  */
-void MyChart::myUpdate(int &mem_offset, std::mutex *mutex_)
+void MyChart::drawFit()
 {
-    getDatas(mem_offset, mutex_);
-    drawData();
-    drawFit();
+    m_serieFit->replace(fit);
+    std::clog << "Mychart :: DrawFit" << std::endl;
 }

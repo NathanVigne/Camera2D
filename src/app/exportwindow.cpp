@@ -1,4 +1,6 @@
 #include "exportwindow.h"
+#include "QThread"
+
 /*!
  * \brief exportWindow::exportWindow
  * \param parent
@@ -12,6 +14,8 @@ exportWindow::exportWindow(QWidget *parent)
     setUpUI();
     connect(buttonOK, &QPushButton::clicked, this, &exportWindow::saveFiles);
     setAttribute(Qt::WA_DeleteOnClose);
+    std::clog << "exportWindow :: Constructor. Thread : " << QThread::currentThreadId()
+              << std::endl;
 }
 
 /*!

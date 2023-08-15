@@ -22,6 +22,9 @@ public:
     int getWidth() const;
     int getHeight() const;
 
+    std::mutex *Smutex() const;
+    std::mutex *Dmutex() const;
+
 private:
     std::mutex *Smutex_;
     std::mutex *Dmutex_;
