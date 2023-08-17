@@ -26,8 +26,8 @@ exportWindow::exportWindow(QWidget *parent)
  */
 exportWindow::~exportWindow()
 {
-    std::clog << "Destroy Export Window" << std::endl;
     buttonExport->setDisabled(false);
+    std::clog << "Destroy Export Window" << std::endl;
 }
 
 /*!

@@ -13,6 +13,7 @@ CameraManager::CameraManager(QObject *parent)
     connect(this, &CameraManager::signal_StartScan, this, &CameraManager::DiscoverCameras);
     connect(this, &CameraManager::signal_StartConnect, this, &CameraManager::CameraConnect);
     moveToThread(&thread);
+    thread.start();
     std::clog << "CameraManager :: Contructor. Thread : " << QThread::currentThreadId()
               << std::endl;
 }
@@ -28,6 +29,10 @@ CameraManager::~CameraManager()
     if (isCamera)
         delete camera;
 
+    std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
+    thread.quit();
+    thread.wait();
+    std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
     std::clog << "Destroy Cam Manager" << std::endl;
 }
 
@@ -39,9 +44,9 @@ CameraManager::~CameraManager()
 */
 void CameraManager::slot_StartScan()
 {
-    thread.start();
-    emit signal_StartScan();
+    //thread.start();
     std::clog << "CameraManager :: StartScan. Thread : " << QThread::currentThreadId() << std::endl;
+    emit signal_StartScan();
 }
 
 /*!
@@ -52,7 +57,7 @@ void CameraManager::slot_StartScan()
 */
 void CameraManager::slot_StartConnect(int id)
 {
-    thread.start();
+    //thread.start();
     std::clog << "CameraManager :: StartConnect. Thread : " << QThread::currentThreadId()
               << std::endl;
     emit signal_StartConnect(id);
@@ -108,7 +113,7 @@ void CameraManager::DiscoverCameras()
         }
     }
     emit signal_EndOfCamScan(&camera_list);
-    QThread::currentThread()->quit();
+    //QThread::currentThread()->quit();
 }
 
 /*!
@@ -147,17 +152,17 @@ void CameraManager::CameraConnect(int id)
             delete camera;
             isCamera = false;
             emit signal_FailledCamConnect();
-            QThread::currentThread()->quit();
+            //QThread::currentThread()->quit();
             return;
         }
         //camera->Initialize();
         emit signal_EndOfCamConnect(camera, type);
-        QThread::currentThread()->quit();
+        //QThread::currentThread()->quit();
         return;
     }
 
     std::cerr << "CameraManager :: CameraConect. Out of bound Id for connecting Camera"
               << std::endl;
     emit signal_FailledCamConnect();
-    QThread::currentThread()->quit();
+    //QThread::currentThread()->quit();
 }

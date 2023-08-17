@@ -31,6 +31,7 @@ GLDisplay::~GLDisplay()
         delete static_cast<unsigned short *>(private_buffer);
         break;
     case BUFF_END:
+        delete private_buffer;
         break;
     }
     std::clog << "GLDisplay :: Destructor" << std::endl;

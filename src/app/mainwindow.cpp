@@ -63,6 +63,47 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete mem; // for safety since all buffer are manage here
+    delete msg;
+    delete window;
+    delete mainLayout;
+    delete bStart;
+    delete bStop;
+    delete bSingleShot;
+    delete bExport;
+    delete bQuit;
+    delete bResetZoom;
+    delete sButtons;
+    delete sZoom;
+    delete lButtons;
+    delete sliderExposure;
+    delete dsbGain;
+    delete rbMonochrome;
+    delete rbSatMonochrome;
+    delete rbSatColor;
+    delete gbSlider;
+    delete gbGain;
+    delete gbColor;
+    delete labelExposure;
+    delete labelzoom;
+    delete lControls;
+    delete lColors;
+    delete lGain;
+    delete lExposure;
+    delete mainDisplay;
+    delete xcutDisplay;
+    delete ycutDisplay;
+    delete gbSecondaryDisplay;
+    delete cbCentrage;
+    delete cbEnergy;
+    delete dsbZoom;
+    delete labelInfo;
+    delete lCheckBoxes;
+    delete lSecondaryDisplay;
+
+    if (cam) {
+        delete xFit;
+        delete yFit;
+    }
     std::clog << "Destroy MainWindow " << std::endl;
 }
 

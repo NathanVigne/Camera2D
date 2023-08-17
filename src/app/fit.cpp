@@ -55,6 +55,10 @@ Fit::~Fit()
     delete[] m_wdata;
     delete[] m_fitData;
     delete[] m_fitParam;
+    std::clog << "Fit :: Thread running ? " << thread.isRunning() << std::endl;
+    thread.quit();
+    thread.wait();
+    std::clog << "Fit :: Thread running ? " << thread.isRunning() << std::endl;
     std::clog << "Fit :: Destructor. Thread : " << std::endl;
 }
 

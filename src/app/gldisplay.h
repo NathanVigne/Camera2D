@@ -84,7 +84,7 @@ private:
     ColorChoice colorChoice;
     int maxVal;
 
-    void *private_buffer;
+    void *private_buffer = nullptr;
 };
 
 #endif // GLDISPLAY_H

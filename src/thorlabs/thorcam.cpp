@@ -11,6 +11,8 @@ ThorCam::~ThorCam()
 {
     CloseRessources();
     handle = 0;
+
+    std::clog << "Thorlabs :: destructor" << std::endl;
 }
 
 /*! \fn void ThorCam::Start()

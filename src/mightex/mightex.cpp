@@ -11,6 +11,7 @@ Mightex::~Mightex()
         MTUSB_UnInitDevice();
         isDLLOpen = false;
     }
+    std::clog << "Migtex :: destructor" << std::endl;
 }
 
 void Mightex::Start()
