@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // Instanciate the memory managment
     mem = new MemoryManager(&m_mutexSave, &m_mutexDisplay);
+    msg = new QMessageBox();
 
     setWindowIcon(QIcon(":/icon/cam_ico.png"));
     uiSetUp();
@@ -63,42 +64,24 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete mem; // for safety since all buffer are manage here
-    delete msg;
-    delete window;
-    delete mainLayout;
-    delete bStart;
-    delete bStop;
-    delete bSingleShot;
-    delete bExport;
-    delete bQuit;
-    delete bResetZoom;
-    delete sButtons;
-    delete sZoom;
-    delete lButtons;
-    delete sliderExposure;
-    delete dsbGain;
-    delete rbMonochrome;
-    delete rbSatMonochrome;
-    delete rbSatColor;
-    delete gbSlider;
-    delete gbGain;
-    delete gbColor;
-    delete labelExposure;
+    delete msg; // Not set-up in UiSetUp
+
+    // delete zoom control
+    delete cbCentrage;
     delete labelzoom;
-    delete lControls;
-    delete lColors;
-    delete lGain;
-    delete lExposure;
-    delete mainDisplay;
+    delete dsbZoom;
+    delete bResetZoom;
+    delete lCheckBoxes;
+
+    // delete secondary display
+    delete labelInfo;
     delete xcutDisplay;
     delete ycutDisplay;
-    delete gbSecondaryDisplay;
-    delete cbCentrage;
-    delete cbEnergy;
-    delete dsbZoom;
-    delete labelInfo;
-    delete lCheckBoxes;
     delete lSecondaryDisplay;
+
+    // delete right side
+    delete gbSecondaryDisplay;
+    delete rightLayout;
 
     if (cam) {
         delete xFit;
@@ -448,13 +431,13 @@ void MainWindow::uiSetUp()
     bQuit->setText("Quit");
     bQuit->setFixedHeight(30);
 
-    sButtons = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    sButtons = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     lButtons = new QHBoxLayout();
     lButtons->addWidget(bStart, 0, Qt::AlignLeft);
     lButtons->addWidget(bStop, 0, Qt::AlignLeft);
     lButtons->addWidget(bSingleShot, 0, Qt::AlignLeft);
-    lButtons->addItem(sButtons);
+    lButtons->addItem(&sButtons);
     lButtons->addWidget(bExport, 0, Qt::AlignRight);
     lButtons->addWidget(bQuit, 0, Qt::AlignRight);
 
@@ -512,13 +495,12 @@ void MainWindow::uiSetUp()
 
     // Check Boxes + Pusbbuton
     cbCentrage = new QCheckBox("Automatic centering", this);
-    cbEnergy = new QCheckBox("Circle 86.5 %", this);
     dsbZoom = new QDoubleSpinBox(this);
     dsbZoom->setRange(0, 1000);
     dsbZoom->setSingleStep(0.5);
     dsbZoom->setValue(zoom_);
     labelzoom = new QLabel("Zoom for Fit", this);
-    sZoom = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    sZoom = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     bResetZoom = new QPushButton(this);
     bResetZoom->setText("Reset Zoom");
 
@@ -536,10 +518,10 @@ void MainWindow::uiSetUp()
 
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
-    lCheckBoxes->addItem(sZoom);
+    lCheckBoxes->addItem(&sZoom);
     lCheckBoxes->addWidget(labelzoom);
     lCheckBoxes->addWidget(dsbZoom);
-    lCheckBoxes->addItem(sZoom);
+    lCheckBoxes->addItem(&sZoom);
     lCheckBoxes->addWidget(bResetZoom);
     lSecondaryDisplay = new QVBoxLayout;
     lSecondaryDisplay->addLayout(lCheckBoxes);
@@ -553,12 +535,12 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     // Main display
     // ----------------------------------------
-    mainDisplay = new GLDisplay(this);
+    mainDisplay = new GLDisplay();
 
     // ----------------------------------------
     // Right Widget set-up
     // ----------------------------------------
-    QVBoxLayout *rightLayout = new QVBoxLayout();
+    rightLayout = new QVBoxLayout();
     rightLayout->addWidget(gbSecondaryDisplay);
     rightLayout->addLayout(lButtons);
 
@@ -628,7 +610,6 @@ void MainWindow::sendReConnect()
  */
 void MainWindow::displayDisconnect()
 {
-    msg = new QMessageBox;
     msg->setWindowIcon(QIcon(":/icon/cam_ico.png"));
     msg->setIcon(QMessageBox::Critical);
     msg->setText("Camera is disconnect !\n Please reconnect the camera.");

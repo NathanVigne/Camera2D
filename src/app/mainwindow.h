@@ -80,7 +80,7 @@ private:
     std::mutex m_mutexDisplay;
     MemoryManager *mem;
     CAMERATYPE cam_type;
-    QMessageBox *msg;
+    QMessageBox *msg; // do not keep here ??
 
     double wx_d;
     double wy_d;
@@ -104,8 +104,8 @@ private:
     QPushButton *bResetZoom;
 
     // Layouts + spacer
-    QSpacerItem *sButtons;
-    QSpacerItem *sZoom;
+    QSpacerItem sButtons = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem sZoom = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     QHBoxLayout *lButtons;
 
     // ----------------------------------------
@@ -132,6 +132,7 @@ private:
     QVBoxLayout *lColors;
     QVBoxLayout *lGain;
     QVBoxLayout *lExposure;
+    QVBoxLayout *rightLayout;
 
     // ----------------------------------------
     // Main display
@@ -151,7 +152,6 @@ private:
 
     // Check Boxes
     QCheckBox *cbCentrage;
-    QCheckBox *cbEnergy;
     QDoubleSpinBox *dsbZoom;
 
     // Label

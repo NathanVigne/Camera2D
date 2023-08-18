@@ -35,8 +35,19 @@ MemoryManager::~MemoryManager()
         delete static_cast<unsigned short *>(buffer1);
         break;
     case BUFF_END:
+        buffer0 = nullptr;
+        buffer1 = nullptr;
+        break;
+    default:
+        buffer0 = nullptr;
+        buffer1 = nullptr;
         break;
     }
+
+    Smutex_ = nullptr;
+    Dmutex_ = nullptr;
+    current_ = nullptr;
+    next_ = nullptr;
     std::clog << "MemoryManager :: Destructor" << std::endl;
 }
 
