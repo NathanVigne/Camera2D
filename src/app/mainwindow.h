@@ -104,8 +104,9 @@ private:
     QPushButton *bResetZoom;
 
     // Layouts + spacer
-    QSpacerItem sButtons = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    QSpacerItem sZoom = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem *sButtons;
+    QSpacerItem *sZoom1;
+    QSpacerItem *sZoom2;
     QHBoxLayout *lButtons;
 
     // ----------------------------------------

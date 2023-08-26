@@ -66,23 +66,6 @@ MainWindow::~MainWindow()
     delete mem; // for safety since all buffer are manage here
     delete msg; // Not set-up in UiSetUp
 
-    // delete zoom control
-    delete cbCentrage;
-    delete labelzoom;
-    delete dsbZoom;
-    delete bResetZoom;
-    delete lCheckBoxes;
-
-    // delete secondary display
-    delete labelInfo;
-    delete xcutDisplay;
-    delete ycutDisplay;
-    delete lSecondaryDisplay;
-
-    // delete right side
-    delete gbSecondaryDisplay;
-    delete rightLayout;
-
     if (cam) {
         delete xFit;
         delete yFit;
@@ -411,33 +394,33 @@ void MainWindow::uiSetUp()
     // ----------------------------------------
     // Push Buttons Set Up
     // ----------------------------------------
-    bStart = new QPushButton(this);
+    bStart = new QPushButton();
     bStart->setText("Start");
     bStart->setFixedHeight(30);
 
-    bStop = new QPushButton(this);
+    bStop = new QPushButton();
     bStop->setText("Stop");
     bStop->setFixedHeight(30);
 
-    bSingleShot = new QPushButton(this);
+    bSingleShot = new QPushButton();
     bSingleShot->setText("Single shot");
     bSingleShot->setFixedHeight(30);
 
-    bExport = new QPushButton(this);
+    bExport = new QPushButton();
     bExport->setText("Export");
     bExport->setFixedHeight(30);
 
-    bQuit = new QPushButton(this);
+    bQuit = new QPushButton();
     bQuit->setText("Quit");
     bQuit->setFixedHeight(30);
 
-    sButtons = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    sButtons = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     lButtons = new QHBoxLayout();
     lButtons->addWidget(bStart, 0, Qt::AlignLeft);
     lButtons->addWidget(bStop, 0, Qt::AlignLeft);
     lButtons->addWidget(bSingleShot, 0, Qt::AlignLeft);
-    lButtons->addItem(&sButtons);
+    lButtons->addItem(sButtons);
     lButtons->addWidget(bExport, 0, Qt::AlignRight);
     lButtons->addWidget(bQuit, 0, Qt::AlignRight);
 
@@ -450,14 +433,14 @@ void MainWindow::uiSetUp()
     gbColor = new QGroupBox("Colors");
 
     // Controls
-    sliderExposure = new QSlider(Qt::Horizontal, this);
-    dsbGain = new QDoubleSpinBox(this);
-    rbMonochrome = new QRadioButton("Gray Level", this);
-    rbSatMonochrome = new QRadioButton("Gray Level, Red Saturated", this);
-    rbSatColor = new QRadioButton("Color : Thermal", this);
+    sliderExposure = new QSlider(Qt::Horizontal);
+    dsbGain = new QDoubleSpinBox();
+    rbMonochrome = new QRadioButton("Gray Level");
+    rbSatMonochrome = new QRadioButton("Gray Level, Red Saturated");
+    rbSatColor = new QRadioButton("Color : Thermal");
 
     // Labels
-    labelExposure = new QLabel("0,00 ms", this);
+    labelExposure = new QLabel("0,00 ms");
 
     // Layouts
     lColors = new QVBoxLayout();
@@ -494,14 +477,15 @@ void MainWindow::uiSetUp()
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
 
     // Check Boxes + Pusbbuton
-    cbCentrage = new QCheckBox("Automatic centering", this);
-    dsbZoom = new QDoubleSpinBox(this);
+    cbCentrage = new QCheckBox("Automatic centering");
+    dsbZoom = new QDoubleSpinBox();
     dsbZoom->setRange(0, 1000);
     dsbZoom->setSingleStep(0.5);
     dsbZoom->setValue(zoom_);
-    labelzoom = new QLabel("Zoom for Fit", this);
-    sZoom = QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    bResetZoom = new QPushButton(this);
+    labelzoom = new QLabel("Zoom for Fit");
+    sZoom1 = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    sZoom2 = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    bResetZoom = new QPushButton();
     bResetZoom->setText("Reset Zoom");
 
     // Label
@@ -518,12 +502,12 @@ void MainWindow::uiSetUp()
 
     lCheckBoxes = new QHBoxLayout();
     lCheckBoxes->addWidget(cbCentrage);
-    lCheckBoxes->addItem(&sZoom);
+    lCheckBoxes->addItem(sZoom1);
     lCheckBoxes->addWidget(labelzoom);
     lCheckBoxes->addWidget(dsbZoom);
-    lCheckBoxes->addItem(&sZoom);
+    lCheckBoxes->addItem(sZoom2);
     lCheckBoxes->addWidget(bResetZoom);
-    lSecondaryDisplay = new QVBoxLayout;
+    lSecondaryDisplay = new QVBoxLayout();
     lSecondaryDisplay->addLayout(lCheckBoxes);
     lSecondaryDisplay->addWidget(xcutDisplay);
     lSecondaryDisplay->addWidget(ycutDisplay);
