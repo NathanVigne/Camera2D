@@ -26,13 +26,12 @@ CameraManager::CameraManager(QObject *parent)
 */
 CameraManager::~CameraManager()
 {
-    if (isCamera)
-        delete camera;
-
     std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
     thread.quit();
     thread.wait();
     std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
+    if (isCamera)
+        delete camera;
     std::clog << "Destroy Cam Manager" << std::endl;
 }
 
@@ -86,7 +85,7 @@ void CameraManager::DiscoverCameras()
             camera = new ThorCam();
             isCamera = true;
             names_ids = camera->SearchCam();
-            for (int ind; ind < names_ids.names.size(); ind++) {
+            for (int ind = 0; ind < names_ids.names.size(); ind++) {
                 camera_list.name.push_back(names_ids.names[ind]);
                 camera_list.id.push_back(names_ids.ids[ind]);
                 camera_list.type.push_back(THORLABS);
@@ -99,7 +98,7 @@ void CameraManager::DiscoverCameras()
             camera = new Mightex();
             isCamera = true;
             names_ids = camera->SearchCam();
-            for (int ind; ind < names_ids.names.size(); ind++) {
+            for (int ind = 0; ind < names_ids.names.size(); ind++) {
                 camera_list.name.push_back(names_ids.names[ind]);
                 camera_list.id.push_back(names_ids.ids[ind]);
                 camera_list.type.push_back(MIGHTEX);

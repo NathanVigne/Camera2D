@@ -127,6 +127,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
     cam->setFrameReadyCallback([this]() { this->sendFrameReady(); });
     cam->setDisconnectCbck([this]() { this->sendDisconnect(); });
     cam->setConnectCbck([this]() { this->sendReConnect(); });
+    cam->setWinHandle((HWND) this->winId());
     cam->Initialize();
 
     // initialize chart

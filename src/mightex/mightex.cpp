@@ -4,13 +4,13 @@ Mightex *Mightex::ctx;
 
 Mightex::~Mightex()
 {
-    if (isDLLOpen) {
-        if (isConnected) {
-            Disconnect();
-        }
-        MTUSB_UnInitDevice();
-        isDLLOpen = false;
-    }
+    //    if (isDLLOpen) {
+    //        if (isConnected) {
+    Disconnect();
+    //        }
+    //        MTUSB_UnInitDevice();
+    //        isDLLOpen = false;
+    //    }
     std::clog << "Migtex :: destructor" << std::endl;
 }
 
@@ -159,18 +159,38 @@ int Mightex::Connect(std::string ID)
         isConnected = true;
         return 0;
     }
+    char bufferA[16];
+    char bufferB[16];
+    MTUSB_GetModuleNo(m_camHandle, bufferA);
+    MTUSB_GetSerialNo(m_camHandle, bufferB);
+
     return 1;
 }
 
 void Mightex::Disconnect()
 {
-    if (isConnected) {
-        if (isEngineOn) {
-            MTUSB_StopCameraEngine(m_camHandle);
-            isEngineOn = false;
+    if (isDLLOpen) {
+        if (isConnected) {
+            if (isEngineOn) {
+                if (isRunning) {
+                    int result = MTUSB_StopFrameGrab(m_camHandle);
+                    if (result != 1) {
+                        std::cerr
+                            << "Mightex :: Stop :: Failed to Stop (invalid camHandle) or engine "
+                               "not started"
+                            << std::endl;
+                        return;
+                    }
+                    isRunning = false;
+                }
+                int res = MTUSB_StopCameraEngine(m_camHandle);
+                std::clog << "Mightex :: StopEngine :: " << res << std::endl;
+                isEngineOn = false;
+            }
+            isConnected = false;
         }
-        m_camHandle = -1;
-        isConnected = false;
+        MTUSB_UnInitDevice();
+        isDLLOpen = false;
     }
 }
 
@@ -220,6 +240,8 @@ CamNamesIDs Mightex::SearchCam()
         }
     }
 
+    // Disconnect
+    //Disconnect();
     name_id.ids = camera_ids_list;
     name_id.names = camera_names_list;
 
@@ -228,14 +250,22 @@ CamNamesIDs Mightex::SearchCam()
 
 void Mightex::Initialize()
 {
+    // instal P&P
+    ctx = this;
+    MTUSB_InstallDeviceHooker(CameraUSBEventCallback);
+
     // Start Cam engine
-    int result = MTUSB_StartCameraEngine(NULL, m_camHandle);
+    std::clog << "Mightex :: Initialize :: winHandle :: " << winHandle << std::endl;
+    int result = MTUSB_StartCameraEngine(winHandle, m_camHandle);
     if (result != 1) {
         std::cerr << "Mightex :: Initialize :: (invalid camHandle) or engine not started"
                   << std::endl;
         return;
     }
     isEngineOn = true;
+
+    //set work mode
+    MTUSB_SetCameraWorkMode(m_camHandle, 0);
 
     // Load camSettings
     loadCamSettings();
@@ -300,10 +330,6 @@ void Mightex::Initialize()
 
     // initialize buffer for the Frame callBack
     m_mem->allocateMem(sensorWidth_px, sensorHeight_px, buff_type);
-
-    // instal P&P
-    ctx = this;
-    MTUSB_InstallDeviceHooker(CameraUSBEventCallback);
 
     // The frame callback must be install each time we
     // frame grabbing
