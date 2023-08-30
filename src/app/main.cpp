@@ -18,13 +18,11 @@ int main(int argc, char *argv[])
     QObject::connect(&cW,
                      &ConnectWindow::signal_Connect,
                      &camManager,
-                     &CameraManager::slot_StartConnect,
-                     Qt::DirectConnection);
+                     &CameraManager::CameraConnect);
     QObject::connect(&cW,
                      &ConnectWindow::signal_Refresh,
                      &camManager,
-                     &CameraManager::slot_StartScan,
-                     Qt::DirectConnection);
+                     &CameraManager::DiscoverCameras);
 
     // Connect signals of camera loader
     QObject::connect(&camManager,

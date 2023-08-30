@@ -10,10 +10,6 @@
 CameraManager::CameraManager(QObject *parent)
     : QObject(parent)
 {
-    connect(this, &CameraManager::signal_StartScan, this, &CameraManager::DiscoverCameras);
-    connect(this, &CameraManager::signal_StartConnect, this, &CameraManager::CameraConnect);
-    moveToThread(&thread);
-    thread.start();
     std::clog << "CameraManager :: Contructor. Thread : " << QThread::currentThreadId()
               << std::endl;
 }
@@ -26,46 +22,16 @@ CameraManager::CameraManager(QObject *parent)
 */
 CameraManager::~CameraManager()
 {
-    std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
-    thread.quit();
-    thread.wait();
-    std::clog << "Cam Manager :: Thread running ? " << thread.isRunning() << std::endl;
     if (isCamera)
         delete camera;
+
     std::clog << "Destroy Cam Manager" << std::endl;
-}
-
-/*!
-    \fn void CameraManager::slot_StartScan()
-    
-    Public slot to launch camera scanning operation.
-    Start new thread then emit signal starting work 
-*/
-void CameraManager::slot_StartScan()
-{
-    //thread.start();
-    std::clog << "CameraManager :: StartScan. Thread : " << QThread::currentThreadId() << std::endl;
-    emit signal_StartScan();
-}
-
-/*!
-    \fn void CameraManager::slot_StartConnect(int id)
-    
-    Public slot to launch camera connect operation.
-    Start new thread then emit signal starting work 
-*/
-void CameraManager::slot_StartConnect(int id)
-{
-    //thread.start();
-    std::clog << "CameraManager :: StartConnect. Thread : " << QThread::currentThreadId()
-              << std::endl;
-    emit signal_StartConnect(id);
 }
 
 /*!
     \fn void CameraManager::DiscoverCameras()
     
-    Private slot to launch inside a new thread.
+    Public slot.
     Scan for camera using the ICamera interface
     then emits the CameraList to ConnecWindow.
     After it quit the thread
@@ -112,13 +78,12 @@ void CameraManager::DiscoverCameras()
         }
     }
     emit signal_EndOfCamScan(&camera_list);
-    //QThread::currentThread()->quit();
 }
 
 /*!
     \fn void CameraManager::CameraConnect(int id)
     
-    Private slot to launch inside a new thread.
+    Public slot.
     Connect to the selectred camera using the interface
     ICamera then emits either the ICamera pointer if
     succesfull or a nothing if not. 
@@ -151,17 +116,13 @@ void CameraManager::CameraConnect(int id)
             delete camera;
             isCamera = false;
             emit signal_FailledCamConnect();
-            //QThread::currentThread()->quit();
             return;
         }
-        //camera->Initialize();
         emit signal_EndOfCamConnect(camera, type);
-        //QThread::currentThread()->quit();
         return;
     }
 
     std::cerr << "CameraManager :: CameraConect. Out of bound Id for connecting Camera"
               << std::endl;
     emit signal_FailledCamConnect();
-    //QThread::currentThread()->quit();
 }
