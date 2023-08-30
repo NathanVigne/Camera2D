@@ -95,10 +95,6 @@ void MainWindow::callBackDraw()
     int y = mainDisplay->getCroix().y();
     xcutDisplay->myUpdate(y, &m_mutexDisplay);
     ycutDisplay->myUpdate(x, &m_mutexDisplay);
-
-    // TO DO : with new fit
-    // xFit->offsetUpdate(x);
-    // yFit->offsetUpdate(y);
 }
 
 /*!
@@ -152,7 +148,7 @@ void MainWindow::slot_CameraOpen(ICamera *camera, CAMERATYPE type)
             &MainWindow::receivedLabelY,
             Qt::QueuedConnection);
 
-    yFit = new Fit(cam->getSensorWidth(), 4, 201, 1, ycutDisplay);
+    yFit = new Fit(cam->getSensorHeigth(), 4, 201, 1, ycutDisplay);
     connect(yFit, &Fit::fitEND, ycutDisplay, &MyChart::copyFitData, Qt::QueuedConnection);
 
     // Inittialize UI and cam controls
@@ -232,11 +228,13 @@ void MainWindow::slot_Stop()
 void MainWindow::slot_SingleShot()
 {
     std::clog << "MW : Single Shot Clicked" << std::endl;
-    xFit->startsingle();
-    yFit->startsingle();
     cam->SingleShot();
     bStart->setDisabled(false);
     isRunning = false;
+
+    int delay = (int) (cam->GetExposure() / 1000.0) + 100;
+    xFit->startsingle(delay);
+    yFit->startsingle(delay);
 }
 
 /*!

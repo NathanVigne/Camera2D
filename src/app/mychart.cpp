@@ -41,7 +41,7 @@ MyChart::MyChart(const int _axe_XY, QColor pen_Color, int bitDepth, QWidget *par
  */
 MyChart::~MyChart()
 {
-    std::clog << "MyChart :: destructor." << std::endl;
+    std::clog << "MyChart :: destructor :: " << this << std::endl;
 }
 
 /*!
@@ -142,6 +142,7 @@ void MyChart::setMaxY(int newMaxY)
  */
 void MyChart::myUpdate(int &mem_offset, std::mutex *mutex_)
 {
+    std::clog << "Mychart :: myUpdate :: " << this << std::endl;
     getDatas(mem_offset, mutex_);
     drawData();
     drawFit();
@@ -159,7 +160,7 @@ void MyChart::myUpdate(int &mem_offset, std::mutex *mutex_)
 void MyChart::copyFitData(double *fit_data, double *fit_param, std::mutex *mutex)
 {
     std::scoped_lock lock(m_mutex_fit, *mutex); // obsolete ?
-    std::clog << "Mychart :: copyFitData" << std::endl;
+    std::clog << "Mychart :: copyFitData :: " << this << std::endl;
     memcpy(f_data, fit_data, sizeof(double) * N_fit);
     memcpy(f_param, fit_param, sizeof(double) * P);
     emit receivedFit(&m_mutex_fit, f_param);
@@ -173,6 +174,8 @@ void MyChart::copyFitData(double *fit_data, double *fit_param, std::mutex *mutex
  */
 void MyChart::processFitData(std::mutex *mutex, double *params)
 {
+    std::clog << "Mychart :: processFitDataa :: " << this << std::endl;
+
     double x = 0.0;
     fit.clear();
     for (int i = 0; i < N_fit; ++i) {
@@ -180,7 +183,6 @@ void MyChart::processFitData(std::mutex *mutex, double *params)
         fit.append(QPointF(x, f_data[i]));
     }
     drawFit();
-    std::clog << "Mychart :: processFitDataa" << std::endl;
 }
 
 /*!
@@ -203,9 +205,9 @@ void MyChart::setUpChart()
     m_serieData->setUseOpenGL(true);
 
     // Courbe style for Fit
-    QPen pen(penColor);
-    pen.setWidth(1);
-    pen.setStyle(Qt::DashLine);
+    QPen pen(QColor(0, 0, 0));
+    pen.setWidth(2);
+    //pen.setStyle(Qt::DashLine);
     m_serieFit->setPen(pen);
 
     // Creat new chart with two series (Data & Fit)
@@ -343,6 +345,8 @@ void MyChart::getDatas(int &offset, std::mutex *mutex_)
  */
 void MyChart::drawData()
 {
+    std::clog << "Mychart :: DrawData :: " << this << std::endl;
+
     m_serieData->replace(data);
 }
 
@@ -357,6 +361,7 @@ void MyChart::drawData()
  */
 void MyChart::drawFit()
 {
+    std::clog << "Mychart :: DrawFit :: " << this << std::endl;
+
     m_serieFit->replace(fit);
-    std::clog << "Mychart :: DrawFit" << std::endl;
 }

@@ -30,17 +30,23 @@ Fit::Fit(
 
     // Allocate space for data
     m_vdata = new double[N];
+    //double m_vdata[N];
     for (int i = 0; i < n; ++i) {
         m_vdata[i] = i;
     }
+
     m_wdata = new double[N];
+    //double m_wdata[N];
     for (int i = 0; i < n; ++i) {
         m_wdata[i] = 0;
     }
     // Allocate space for fit param
     param_guess = new double[P];
+    //double param_guess[P];
     m_fitParam = new double[P];
+    //double m_fitParam[P];
     m_fitData = new double[N_fit];
+    //double m_fitData[N_fit];
 
     // Move this object to a new thread !
     moveToThread(&thread);
@@ -83,10 +89,10 @@ void Fit::stop()
 }
 
 // A revoir la fonction a appeler
-void Fit::startsingle()
+void Fit::startsingle(int delay)
 {
     timer->stop();
-    timer->singleShot(100, this, &Fit::Fitting);
+    timer->singleShot(delay, this, &Fit::Fitting);
 }
 
 void Fit::getDatas()
@@ -103,6 +109,7 @@ void Fit::getDatas()
 void Fit::Fitting()
 {
     //    std::clog << "Start Fit" << std::endl;
+    std::clog << "Fit :: Start Fitting :: " << axe_XY << std::endl;
 
     getDatas();
 
@@ -221,25 +228,35 @@ int Fit::initialGuess()
         N = N + 2;
     }
     bck = bck / N;
+    std::clog << "Fit :: Init Guess :: " << axe_XY << " :: bck = " << bck << std::endl;
+    std::clog << "Fit :: Init Guess :: " << axe_XY << " :: N = " << N << std::endl;
 
     // get new vector;
     double yy[n];
     for (int i = 0; i < n; ++i) {
         yy[i] = m_wdata[i] - bck;
     }
+    std::clog << "Fit :: Init Guess :: " << axe_XY << " :: yy[200] = " << yy[200] << std::endl;
 
     param_guess[0] = gsl_stats_max(m_wdata, 1, n);          // for param : A
     param_guess[3] = gsl_stats_min(m_wdata, 1, n);          // for param : b
     param_guess[1] = gsl_stats_wmean(yy, 1, m_vdata, 1, n); // get centroid
-    param_guess[2] = std::abs(gsl_stats_wsd_with_fixed_mean(yy,
-                                                            1,
-                                                            m_vdata,
-                                                            1,
-                                                            n,
-                                                            x0)
-                              * sqrt(2.0)); // bad waist approx!
+    param_guess[2] = gsl_stats_wsd_with_fixed_mean(yy,
+                                                   1,
+                                                   m_vdata,
+                                                   1,
+                                                   n,
+                                                   x0)
+                     * 2.0; // bad waist approx!
+    if (gsl_finite(param_guess[2]) == 0) {
+        param_guess[2] = n;
+    }
 
     init_p = gsl_vector_view_array(param_guess, p);
+
+    std::clog << "Fit :: Init Guess :: " << axe_XY << " ; A :: " << param_guess[0]
+              << " ; b :: " << param_guess[3] << " ; x0 :: " << param_guess[1]
+              << " ; w :: " << param_guess[2] << std::endl;
 
     return GSL_SUCCESS;
 }

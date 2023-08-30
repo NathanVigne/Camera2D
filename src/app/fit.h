@@ -41,7 +41,7 @@ public:
     // controlling the fit
     void startLoop(int time_ms);
     void stop();
-    void startsingle();
+    void startsingle(int delay);
     void offsetUpdate(int &newOffset);
 
 signals:
