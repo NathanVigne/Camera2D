@@ -478,16 +478,15 @@ void MainWindow::uiSetUp()
     gbSecondaryDisplay = new QGroupBox("X/Y profiles and Analysis");
 
     // Check Boxes + Pusbbuton
-    cbCentrage = new QCheckBox("Automatic centering");
     dsbZoom = new QDoubleSpinBox();
     dsbZoom->setRange(0, 1000);
     dsbZoom->setSingleStep(0.5);
     dsbZoom->setValue(zoom_);
-    labelzoom = new QLabel("Zoom for Fit");
+    labelzoom = new QLabel("Zoom for Waist (µm) Fit");
     sZoom1 = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     sZoom2 = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     bResetZoom = new QPushButton();
-    bResetZoom->setText("Reset Zoom");
+    bResetZoom->setText("Reset Display Zoom");
 
     // Label
     labelInfo = new QLabel("Fit Information");
@@ -502,7 +501,6 @@ void MainWindow::uiSetUp()
         "\t\tX\t|\tY\nWaist (px) : \t xxx \t|\t xxx \nWaist (µm) : \t xxx \t|\t xxx");
 
     lCheckBoxes = new QHBoxLayout();
-    lCheckBoxes->addWidget(cbCentrage);
     lCheckBoxes->addItem(sZoom1);
     lCheckBoxes->addWidget(labelzoom);
     lCheckBoxes->addWidget(dsbZoom);

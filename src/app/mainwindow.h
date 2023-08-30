@@ -152,7 +152,7 @@ private:
     QGroupBox *gbSecondaryDisplay;
 
     // Check Boxes
-    QCheckBox *cbCentrage;
+
     QDoubleSpinBox *dsbZoom;
 
     // Label
