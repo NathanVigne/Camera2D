@@ -15,7 +15,7 @@ Before installing Camera2D, make sure you have the following dependencies instal
 1. **Clone the Repository**: Clone the Camera2D repository to your local machine using Git:
 
     ```bash
-    git clone https://github.com/yourusername/Camera2D.git
+    git clone https://github.com/NathanVigne/Camera2D.git
     ```
 
 ## Usage
