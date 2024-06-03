@@ -6,8 +6,12 @@
 #include "icamera.h"
 #include "mightex.h"
 #include "thorcam.h"
+#include "alliedvision.h"
 
-enum CAMERATYPE { THORLABS, MIGHTEX, CAMTYPE_LAST };
+enum CAMERATYPE { THORLABS,
+                  MIGHTEX,
+                  ALLIEDVISION,
+                  CAMTYPE_LAST };
 
 struct CamList
 {

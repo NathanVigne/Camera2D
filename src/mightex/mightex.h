@@ -49,7 +49,7 @@ private:
     static Mightex *ctx;
     static void CameraUSBEventCallback(int fault_type);
     static void FrameAvailableCallback(
-        int FrameType, int Row, int Col, TImageAttachData *Attributes, unsigned char *BytePtr);
+    int FrameType, int Row, int Col, TImageAttachData *Attributes, unsigned char *BytePtr);
 };
 
 #endif // MIGHTEX_H

@@ -50,6 +50,7 @@ target_link_libraries(Camera2D PRIVATE
     GSL::gslcblas
     thorlabs
     mightex
+    alliedvision
 )
 
 set_target_properties(Camera2D PROPERTIES

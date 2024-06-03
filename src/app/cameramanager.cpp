@@ -60,7 +60,6 @@ void CameraManager::DiscoverCameras()
             isCamera = false;
             break;
         case MIGHTEX:
-            // TO DO mightex implementation
             camera = new Mightex();
             isCamera = true;
             names_ids = camera->SearchCam();
@@ -68,6 +67,19 @@ void CameraManager::DiscoverCameras()
                 camera_list.name.push_back(names_ids.names[ind]);
                 camera_list.id.push_back(names_ids.ids[ind]);
                 camera_list.type.push_back(MIGHTEX);
+            }
+            delete camera;
+            isCamera = false;
+            break;
+        case ALLIEDVISION:
+            // TO DO AlliedVision implementation
+            camera = new AlliedVision();
+            isCamera = true;
+            names_ids = camera->SearchCam();
+            for (int ind = 0; ind < names_ids.names.size(); ind++) {
+                camera_list.name.push_back(names_ids.names[ind]);
+                camera_list.id.push_back(names_ids.ids[ind]);
+                camera_list.type.push_back(ALLIEDVISION);
             }
             delete camera;
             isCamera = false;
@@ -107,6 +119,13 @@ void CameraManager::CameraConnect(int id)
             isCamera = true;
             result = camera->Connect(camera_list.id[id]);
             type = CAMERATYPE::MIGHTEX;
+            break;
+        case ALLIEDVISION:
+            // TO DO mightex implementation
+            camera = new AlliedVision();
+            isCamera = true;
+            result = camera->Connect(camera_list.id[id]);
+            type = CAMERATYPE::ALLIEDVISION;
             break;
         case CAMTYPE_LAST:
             break;
