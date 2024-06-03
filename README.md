@@ -8,7 +8,9 @@ Camera2D is a Qt-based application designed for live viewing of scientifics came
 
 Before installing Camera2D, make sure you have the following dependencies installed:
 
+- [Qt](https://www.qt.io/)
 - [GSL (GNU Scientific Library)](https://www.gnu.org/software/gsl/)
+- [CMake](https://cmake.org/)
 
 ### Installation Steps
 

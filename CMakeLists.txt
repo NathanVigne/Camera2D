@@ -22,7 +22,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets Charts)
 add_subdirectory(src/app)
 add_subdirectory(src/thorlabs)
 add_subdirectory(src/mightex)
-
+add_subdirectory(src/alliedvision)
 
 
 

@@ -11,7 +11,7 @@ add_library(mightex STATIC
     MT_USBCamera_SDK.h
 )
 
-target_link_libraries(mightex PRIVATE Qt6::Core C:/dev/Camera2D/Camera2D/src/mightex/dlls/x64/MT_USBCamera_SDK.lib)
+target_link_libraries(mightex PRIVATE Qt6::Core C:/dev/Camera2D/src/mightex/dlls/x64/MT_USBCamera_SDK.lib)
 
 target_include_directories(mightex INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 

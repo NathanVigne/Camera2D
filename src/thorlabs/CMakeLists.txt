@@ -2,7 +2,6 @@ add_library(thorlabs STATIC
     tl_camera_sdk_load.c
     thorcam.cpp
     thorcam.h
-
 )
 target_link_libraries(thorlabs PRIVATE Qt6::Core)
 

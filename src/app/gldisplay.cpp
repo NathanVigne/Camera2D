@@ -1,6 +1,6 @@
 #include "gldisplay.h"
 #include "QThread"
-#include <random>
+//#include <random>
 
 #define PROGRAM_VERTEX_ATTRIBUTE 0
 #define PROGRAM_TEXCOORD_ATTRIBUTE 1
@@ -31,7 +31,8 @@ GLDisplay::~GLDisplay()
         delete static_cast<unsigned short *>(private_buffer);
         break;
     case BUFF_END:
-        delete private_buffer;
+        // assume char as buffer
+        delete static_cast<unsigned char *>(private_buffer);;
         break;
     }
     std::clog << "GLDisplay :: Destructor" << std::endl;
