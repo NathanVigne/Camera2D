@@ -86,6 +86,8 @@ MainWindow::~MainWindow()
  */
 void MainWindow::callBackDraw()
 {
+    std::clog << "Mainwindow :: Draw callback called" << std::endl;
+
     mainDisplay->setTexture(mem->display(), &m_mutexDisplay);
     mainDisplay->update();
 

@@ -31,8 +31,7 @@ GLDisplay::~GLDisplay()
         delete static_cast<unsigned short *>(private_buffer);
         break;
     case BUFF_END:
-        // assume char as buffer
-        delete static_cast<unsigned char *>(private_buffer);;
+        private_buffer = nullptr;
         break;
     }
     std::clog << "GLDisplay :: Destructor" << std::endl;
@@ -225,11 +224,6 @@ void GLDisplay::mouseReleaseEvent(QMouseEvent *e)
  */
 void GLDisplay::initializeGL()
 {
-    initializeOpenGLFunctions();
-
-    // Dark Gray background color
-    glClearColor(clearCol.redF(), clearCol.greenF(), clearCol.blueF(), 1);
-
     scale.setToIdentity();
     translation.setToIdentity();
 
@@ -239,15 +233,23 @@ void GLDisplay::initializeGL()
     oldWidth = width();
     oldHeight = height();
 
+    initializeOpenGLFunctions();
+
     makeObject();
     initShaders();
     initTexture();
 
     glEnable(GL_CULL_FACE);
-
     // Not used with camera
     //glEnable(GL_BLEND);
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Dark Gray background color
+    glClearColor(clearCol.redF(), clearCol.greenF(), clearCol.blueF(), 1);
+
+
+    std::clog << "GlDisplay :: Initialized finisched" << std::endl;
+
 }
 
 /*!
@@ -262,6 +264,8 @@ void GLDisplay::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     textures->bind();
+    vbo.bind();
+    program->bind();
 
     // Set modelview-projection matrix
     program->setUniformValue("mvp_matrix", projection * translation * scale);
@@ -280,6 +284,7 @@ void GLDisplay::paintGL()
                                 3 * sizeof(GLfloat),
                                 2,
                                 5 * sizeof(GLfloat));
+
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
@@ -335,9 +340,20 @@ void GLDisplay::makeObject()
         vertData.append(j == 2 || j == 3);
     }
 
-    vbo.create();
-    vbo.bind();
+    if(!vbo.create()){
+        std::clog << "VBO Err not created" << std::endl;
+    }
+    if(!vbo.bind()){
+        std::clog << "VBO Err not binded" << std::endl;
+    }
     vbo.allocate(vertData.constData(), vertData.count() * sizeof(GLfloat));
+
+    if(glGetError()){
+        std::clog << "VBO Err Allocation" << std::endl;
+        Q_ASSERT(glGetError());
+    }
+    std::clog << "GlDisplay :: MakeObject finisched" << std::endl;
+
 }
 
 /*!
@@ -350,23 +366,40 @@ void GLDisplay::initShaders()
     program = new QOpenGLShaderProgram;
 
     // Compile vertex shader
-    if (!program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shd/shader.vert"))
+    if (!program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shd/shader.vert")){
+        std::clog << program->log().toStdString() << std::endl;
         close();
+    }
 
     // Compile fragment shader
-    if (!program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shd/shader.frag"))
+    if (!program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shd/shader.frag")){
+        std::clog << program->log().toStdString() << std::endl;
         close();
+    }
 
     program->bindAttributeLocation("vertex", PROGRAM_VERTEX_ATTRIBUTE);
     program->bindAttributeLocation("texCoord", PROGRAM_TEXCOORD_ATTRIBUTE);
 
+    std::clog << program->log().toStdString() << std::endl;
+
+    if(glGetError()){
+        std::clog << "OpenGL Shader Bind Allocation" << std::endl;
+        Q_ASSERT(glGetError());
+    }
+
     // Link shader pipeline
-    if (!program->link())
+    if (!program->link()){
+        std::clog << "OpenGL Shader linking failed" << std::endl;
         close();
+    }
 
     // Bind shader pipeline for use
-    if (!program->bind())
+    if (!program->bind()){
+        std::clog << "OpenGL Shader bind failed" << std::endl;
         close();
+    }
+    std::clog << "GlDisplay :: Initshader finisched" << std::endl;
+
 }
 
 /*!
@@ -414,7 +447,7 @@ void GLDisplay::initTexture()
     if (buff_type == U8) {
         for (int i = 0; i < texHeigth; ++i) {
             for (int j = 0; j < texWidth; ++j) {
-                static_cast<char *>(private_buffer)[i * texWidth + j] = 0;
+                static_cast<char *>(private_buffer)[i * texWidth + j] = 10;
             }
         }
         textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8, private_buffer);
@@ -422,11 +455,18 @@ void GLDisplay::initTexture()
     } else if (buff_type == U16) {
         for (int i = 0; i < texHeigth; ++i) {
             for (int j = 0; j < texWidth; ++j) {
-                static_cast<unsigned short *>(private_buffer)[i * texWidth + j] = 0;
+                static_cast<unsigned short *>(private_buffer)[i * texWidth + j] = 20;
             }
         }
         textures->setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt16, private_buffer);
     }
+
+    if(glGetError()){
+        std::clog << "Texture Err" << std::endl;
+        Q_ASSERT(glGetError());
+    }
+
+    std::clog << "GlDisplay :: InitTexture finisched" << std::endl;
 }
 
 /*!

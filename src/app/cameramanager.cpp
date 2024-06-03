@@ -114,14 +114,13 @@ void CameraManager::CameraConnect(int id)
             type = CAMERATYPE::THORLABS;
             break;
         case MIGHTEX:
-            // TO DO mightex implementation
             camera = new Mightex();
             isCamera = true;
             result = camera->Connect(camera_list.id[id]);
             type = CAMERATYPE::MIGHTEX;
             break;
         case ALLIEDVISION:
-            // TO DO mightex implementation
+            // TO DO AlliedVision implementation
             camera = new AlliedVision();
             isCamera = true;
             result = camera->Connect(camera_list.id[id]);

@@ -95,7 +95,7 @@ void AlliedVision::SetGain(const double gain_db)
 */
 int AlliedVision::Connect(std::string ID)
 {
-    return -1;
+    return 0;
 }
 
 
@@ -145,7 +145,20 @@ CamNamesIDs AlliedVision::SearchCam()
 */
 void AlliedVision::Initialize()
 {
+    sensorHeight_px = 1024;
+    sensorWidth_px = 1280;
+    pixelWidth = 5;
+    pixelHeight = 5;
+    bit_depth = 8;
+    buff_type = U8;
+    max_gain = 10;
+    min_gain = 0;
+    max_exposure = 1000;
+    min_exposure = 12;
 
+    // initialize buffer for the Frame callBack
+    m_mem->allocateMem(sensorWidth_px, sensorHeight_px, buff_type);
+    std::clog << "AlliedVision :: Initialized" << std::endl;
 }
 
 
@@ -159,7 +172,7 @@ void AlliedVision::Initialize()
  */
 void AlliedVision::setFrameReadyCallback(std::function<void ()> frameReadyCallback)
 {
-
+    std::clog << "AlliedVision :: FrameReady callback" << std::endl;
 }
 
 
@@ -173,7 +186,7 @@ void AlliedVision::setFrameReadyCallback(std::function<void ()> frameReadyCallba
  */
 void AlliedVision::setDisconnectCbck(std::function<void ()> disconnectCbck)
 {
-
+    std::clog << "AlliedVision :: Cam disconnect callback" << std::endl;
 }
 
 /*!
@@ -186,5 +199,5 @@ void AlliedVision::setDisconnectCbck(std::function<void ()> disconnectCbck)
  */
 void AlliedVision::setConnectCbck(std::function<void ()> connectCbck)
 {
-
+    std::clog << "AlliedVision :: Cam connect callback" << std::endl;
 }
