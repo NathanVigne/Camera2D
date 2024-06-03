@@ -28,6 +28,42 @@ Before installing Camera2D, make sure you have the following dependencies instal
 
 Contributions are welcome! If you find any bugs or have suggestions for improvements, please open an issue or create a pull request.
 
+### Adding support for another Camera API
+
+1. Create a new Cmake library project targeting your new API
+
+```cmake
+add_library(NewAPI STATIC
+    NewAPI.cpp
+    NewAPI.h
+)
+target_link_libraries(NewAPI PRIVATE Qt6::Core NewAPI_lib)
+target_include_directories(NewAPI INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(../app)
+```
+
+2. Inherit and implement the Camera interface "./app/ICamera.h" inside your new project
+
+```cpp
+#include "../app/icamera.h"
+class NewAPI : public ICamera {};
+```
+
+3. Add support for your new API inside "./app/CameraManager.h"
+
+```cpp
+#include "NewAPI.h"
+enum CAMERATYPE { THORLABS,
+                  MIGHTEX,
+                  ALLIEDVISION,
+                  NEW_API,
+                  CAMTYPE_LAST };
+```
+
+3. Add support for your new API inside "./app/CameraManager.cpp". Add support in function DiscoverCameras() and CameraConnect()
+
+4. All set!
+
 ## License
 
 This project is licensed under the [GPL License](LICENSE).
